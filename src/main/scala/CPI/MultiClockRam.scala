@@ -3,7 +3,6 @@ package CPI
 import chisel3._
 import chisel3.util._
 
-
 class DualClockRam[T <: Data](memDepth: Int,
                               gen: T) extends Module{
   val depth=memDepth
@@ -25,6 +24,7 @@ class DualClockRam[T <: Data](memDepth: Int,
   }
   io.dataOut := buffer.read(io.readAddr)
 }
+
 class DualClockRamDemo[T <: Data](memDepth: Int,
                                   gen: T) extends Module{
   val io=IO(new Bundle{
@@ -52,6 +52,5 @@ class DualClockRamDemo[T <: Data](memDepth: Int,
   dualClockRam.io.dataIn   <> io.dataIn
   dualClockRam.io.dataOut  <> io.dataOut
   dualClockRam.io.wrEna    <> io.wrEna
-  dualClockRam.clock       <> clock
 }
 
