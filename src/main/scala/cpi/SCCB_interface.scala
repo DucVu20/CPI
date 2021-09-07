@@ -3,12 +3,12 @@ package sislab.cpi
 import chisel3._
 import chisel3.util._
 
-class SCCB_interface(CLK_FREQ_MHz: Float, SCCB_FREQ_KHz: Float) extends Module{
-  val MHz   = scala.math.pow(10,6)
-  val kHz   = scala.math.pow(10,3)
-  val timer = (CLK_FREQ_MHz * MHz / (SCCB_FREQ_KHz * kHz * 2)).toInt
+class SCCB_interface(CLK_FREQ_MHz: Double, SCCB_FREQ_KHz: Double) extends Module{
+  val MHz=scala.math.pow(10,6)
+  val kHz=scala.math.pow(10,3)
+  val timer=(CLK_FREQ_MHz*MHz/(SCCB_FREQ_KHz*kHz*2)).toInt
 
-  val io = IO(new Bundle{
+  val io=IO(new Bundle{
     val config          = Input(Bool())
     val sccb_ready      = Output(Bool())
     val SIOC            = Output(Bool())
@@ -22,35 +22,33 @@ class SCCB_interface(CLK_FREQ_MHz: Float, SCCB_FREQ_KHz: Float) extends Module{
   // phase 3: data to be overwritten to control registers inside OV7670 to specify working mode
 
   val OV7670_write_addr = "h42".U
-  val sccb_ready = WireInit(true.B)
+  val sccb_ready        = WireInit(true.B)
 
-  val latched_addr = RegInit(0.U(8.W))
-  val latched_data = RegInit(0.U(8.W))
+  val latched_addr      = RegInit(0.U(8.W))
+  val latched_data      = RegInit(0.U(8.W))
 
-  val sccb_timer       = RegInit(0.U(32.W))
-  val tx_byte          = RegInit(0.U(8.W))
-  val byte_index       = RegInit(0.U(4.W))
-  val byte_counter     = RegInit(0.U(2.W))
-  val SIOC             = RegInit(false.B)
-  val SIOD             = RegInit(false.B)
-  val FMS_return_state = RegInit(0.U(3.W))
+  val sccb_timer        = RegInit(0.U(32.W))
+  val tx_byte           = RegInit(0.U(8.W))
+  val byte_index        = RegInit(0.U(4.W))
+  val byte_counter      = RegInit(0.U(2.W))
+  val SIOC              = RegInit(false.B)
+  val SIOD              = RegInit(false.B)
+  val FMS_return_state  = RegInit(0.U(3.W))
 
   val fms_idle::fms_start::fms_load_byte::fms_tx_byte_low::fms_tx_byte_high::fms_index_check::fms_sccb_timer::fms_stop::Nil = Enum(8)
-
-  val FMS = RegInit(fms_idle)
+  val FMS               = RegInit(fms_idle)
 
   io.sccb_ready := sccb_ready
-
-  io.SIOD := SIOD
-  io.SIOC := SIOC
+  io.SIOD       := SIOD
+  io.SIOC       := SIOC
 
   switch(FMS){
     is(fms_idle){
-      SIOC       := true.B
-      SIOD       := true.B
-      sccb_ready := true.B
+      SIOC := false.B     // bring SIOC, SIOD high
+      SIOD := false.B
+      sccb_ready:=true.B
       when(io.config){
-        FMS := fms_start
+        FMS        := fms_start
         sccb_ready := false.B
       }
       latched_data := io.config_data
@@ -59,22 +57,21 @@ class SCCB_interface(CLK_FREQ_MHz: Float, SCCB_FREQ_KHz: Float) extends Module{
       byte_index   := 0.U
       byte_counter := 0.U
     }
-    is(fms_start){           // bring SIOC high, SIOD low for t_sccb/2
+    is(fms_start){           // bring SIOC high, SIOD low
       sccb_ready       := false.B
-      SIOC             := true.B
-      SIOD             := false.B
+      SIOC             := false.B
+      SIOD             := true.B
       FMS              := fms_sccb_timer            // generate SIOC
       FMS_return_state := fms_load_byte
       sccb_timer       := timer.U
     }
     is(fms_load_byte){    // 1 clock
       sccb_ready := false.B
-      FMS := fms_tx_byte_low
-
+      FMS        := fms_tx_byte_low
       when(byte_counter===3.U ){
-        FMS := fms_stop
+        FMS:=fms_stop
       }
-      byte_index := 0.U
+      byte_index   := 0.U
       byte_counter := byte_counter+1.U
       switch(byte_counter){
         is(0.U) { tx_byte := OV7670_write_addr}
@@ -85,18 +82,17 @@ class SCCB_interface(CLK_FREQ_MHz: Float, SCCB_FREQ_KHz: Float) extends Module{
     }
     is(fms_tx_byte_low){        // start inserting SIOD when SIOC is low for t_sccb/2
       sccb_ready       := false.B
-      SIOC             := false.B
+      SIOC             := true.B
       FMS              := fms_sccb_timer     // data on low edge of SIOC
       FMS_return_state := fms_tx_byte_high
       sccb_timer       := timer.U
-      SIOD := Mux(byte_index===8.U,0.U,tx_byte(7))
+      SIOD             := Mux(byte_index===8.U,0.U,!tx_byte(7))
     }
     is(fms_tx_byte_high){       // keep SIOD same as when SIOC is high, finish one sccb clock for SIOD
       sccb_ready       := false.B
-      SIOC             := true.B
+      SIOC             := false.B
       FMS              := fms_sccb_timer
-      sccb_timer       := timer.U
-      SIOD             := tx_byte(7)
+      sccb_timer       := (timer/2).toInt.U
       FMS_return_state := fms_index_check
     }
     is(fms_index_check){
@@ -111,20 +107,16 @@ class SCCB_interface(CLK_FREQ_MHz: Float, SCCB_FREQ_KHz: Float) extends Module{
     }
     is(fms_stop){
       sccb_ready       := false.B
-      SIOC             := true.B
-      SIOD             := true.B
+      SIOC             := false.B
+      SIOD             := false.B
       sccb_timer       := timer.U
       FMS              := fms_sccb_timer
       FMS_return_state := fms_idle
     }
     is(fms_sccb_timer){           // delay state to create SIOC low and high
       sccb_ready := false.B
-      FMS        := Mux(sccb_timer===0.U,FMS_return_state,FMS)
+      FMS := Mux(sccb_timer===0.U,FMS_return_state,FMS)
       sccb_timer := Mux(sccb_timer===0.U,0.U, sccb_timer-1.U)
     }
   }
-}
-object SCCB_interface extends App {
-  chisel3.Driver.execute(Array[String](), () => new SCCB_interface(
-    50,100))
 }
