@@ -18,19 +18,19 @@ class camera_module(width: Int, height: Int
   val pixelBits = 16
 
   val io  = IO(new Bundle {
-    val p_clk          = Input (Bool())
-    val href           = Input (Bool())
-    val vsync          = Input (Bool())
+    val p_clk         = Input (Bool())
+    val href          = Input (Bool())
+    val vsync         = Input (Bool())
     val pixelIn       = Input (UInt(8.W))
     val pixelOut      = Output(UInt(pixelBits.W))
     val pixelAddr     = Output(UInt(log2Ceil(bufferDepth).W))
     val frameWidth    = Output(UInt(log2Ceil(640).W))
     val frameHeight   = Output(UInt(log2Ceil(480).W))
-    val imageFormat    = Input(UInt(1.W))
-    val capture        = Input (Bool())
-    val capturing      = Output(Bool())
-    val read_frame     = Input (Bool()) // ready
-    val frame_full     = Output(Bool()) // valid
+    val imageFormat   = Input(UInt(1.W))
+    val capture       = Input (Bool())
+    val capturing     = Output(Bool())
+    val read_frame    = Input (Bool()) // ready
+    val frame_full    = Output(Bool()) // valid
 
   })
   val idle :: capture_frame :: Nil = Enum(2)
