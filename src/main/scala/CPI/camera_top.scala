@@ -189,7 +189,7 @@ class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
   io.SIOD:=sccb_interface.io.SIOD
   // capture module
   frame_capture.io.read_frame<>read_pixel
-  frame_capture.io.p_clk<>io.p_clk
+  frame_capture.io.pclk<>io.p_clk
   frame_capture.io.href<>io.href
   frame_capture.io.vsync<>io.vsync
   frame_capture.io.pixelIn<>io.pixel_in

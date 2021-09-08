@@ -11,21 +11,6 @@ import scala.util.Random
 import scala.math.pow
 import CPI.DualClockRam
 
-//class DualClockTester(dut:DualClockRam[UInt]) extends PeekPokeTester(dut){
-//  step(20)
-//  val bufferDepth = dut.depth
-//  val dataBitWidth = dut.io.dataIn.getWidth.toInt
-//  val referenceData = Array.fill(bufferDepth)
-//  {Random.nextInt(pow(2, dataBitWidth).toInt)}
-//
-//  var wrClock=false
-//  for(i<- 0 until bufferDepth){
-//    poke(dut.io.wrAddr,i)
-//    poke(dut.io.dataIn,referenceData(i))
-//    poke(dut.io.wrEna,true)
-//  }
-//
-//}
 
 class DualClockRamTester(dut: DualClockRamDemo[UInt]) extends PeekPokeTester(dut){
   step(50)

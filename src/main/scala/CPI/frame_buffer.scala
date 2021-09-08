@@ -10,15 +10,15 @@ import chisel3.util._
 //    path,"(", 21,33)
 //}
 
-class camera_module(width: Int, height: Int
-                    ) extends Module {
+class camera_module(width: Int,
+                    height: Int)  extends Module {
   val w = width
   val h = height
   val bufferDepth = width * height // the maximum depth of the buffer
   val pixelBits = 16
 
   val io  = IO(new Bundle {
-    val p_clk         = Input (Bool())
+    val pclk         = Input (Bool())
     val href          = Input (Bool())
     val vsync         = Input (Bool())
     val pixelIn       = Input (UInt(8.W))
@@ -55,7 +55,7 @@ class camera_module(width: Int, height: Int
 
  val buffer = Module(new single_port_ram(bufferDepth,UInt(pixelBits.W)))
 
-  val pclkRisingEdge    = (io.p_clk) & (!RegNext(io.p_clk))
+  val pclkRisingEdge    = (io.pclk) & (!RegNext(io.pclk))
   val vsyncFallingEdge  = (!io.vsync) & (RegNext(io.vsync))
 
   //=====================READ ADDRESS GENERATOR==================//

@@ -3,7 +3,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.iotesters._
 import chisel3.iotesters.Driver
-import CPI.{clock_divider,clock_divider_demo}
+import CPI.{clockDivider,clock_divider_demo}
 import org.scalatest._
 
 

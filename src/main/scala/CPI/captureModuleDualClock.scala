@@ -4,7 +4,7 @@ import chisel3.util._
 
 class captureInterface(bufferDepth: Int) extends Module{
   val io=IO(new Bundle{
-    val p_clk         = Input (Clock())
+    val pclk         = Input (Clock())
     val href          = Input (Bool())
     val vsync         = Input (Bool())
     val pixelIn       = Input (UInt(8.W))
@@ -17,7 +17,7 @@ class captureInterface(bufferDepth: Int) extends Module{
     val capturing     = Output(Bool())
   })
 
-  withClock(io.p_clk){
+  withClock(io.pclk){
     val idle :: capture_frame :: Nil = Enum(2)
     val FMS=RegInit(idle)
     val firstByte           = RegInit(0.U(8.W))
@@ -106,7 +106,7 @@ class captureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
   val pixelBits = 16
 
   val io  = IO(new Bundle {
-    val p_clk         = Input (Clock())
+    val pclk         = Input (Clock())
     val href          = Input (Bool())
     val vsync         = Input (Bool())
     val pixelIn       = Input (UInt(8.W))
@@ -143,7 +143,7 @@ class captureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
 
 
   //==============================IO=========================================//
-  captureInterface.io.p_clk := io.p_clk
+  captureInterface.io.pclk := io.pclk
   captureInterface.io.pixelIn :=io.pixelIn
   captureInterface.io.href  := io.href
   captureInterface.io.vsync := io.vsync
@@ -158,7 +158,7 @@ class captureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
   io.bufferStatus := bufferFull
 
   dualClockBuffer.clock := clock
-  dualClockBuffer.io.writeClock := io.p_clk
+  dualClockBuffer.io.writeClock := io.pclk
   dualClockBuffer.io.dataIn     := captureInterface.io.pixelOut
   dualClockBuffer.io.readAddr   := readPtr
   dualClockBuffer.io.dataOut   := io.pixelOut

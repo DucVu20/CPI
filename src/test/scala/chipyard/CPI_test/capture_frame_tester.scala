@@ -16,8 +16,10 @@ class capture_module_tester(dut:camera_module)(n:Int,imageFormat: Int) extends P
   val tp=2*pclock
   val t_line=784*2*pclock
   //===================camera mode================================//
+
   poke(dut.io.imageFormat,imageFormat)    // capture RGB
-  val refFrame=Array.fill(width*height){scala.util.Random.nextInt(65535)}
+  val refFrame=new referenceFrame().generateRandomFrame(height*width,imageFormat)
+
   //====================synthesized timing========================//
   poke(dut.io.vsync,false.B)
   poke(dut.io.href,false.B)
@@ -31,26 +33,27 @@ class capture_module_tester(dut:camera_module)(n:Int,imageFormat: Int) extends P
   poke(dut.io.vsync,false.B)
   poke(dut.io.href,false.B)
   step(17*t_line)
-  // first pixel starts when h_ref goes high
   var idx=0
   var p_clk = true
+  // start streaming pixels
   for(col <-0 until width){
-    poke(dut.io.href,true.B)              // href goes high for one row and goes low for 144_tp
+    poke(dut.io.href,true.B)             // href goes high for one row and goes low for 144_tp
     for(row<-0 until height){
       for(plk_clock<-0 until 2){
-        var pixelIn = pixelStreamGenerator(idx, refFrame,imageFormat,
-          false, plk_clock )
+
+        var pixelIn = new referenceFrame().pixelStream(idx, refFrame,
+          imageFormat, plk_clock)
 
         poke(dut.io.href,true.B)
         poke(dut.io.vsync,false.B)
         p_clk = !p_clk
-        poke(dut.io.p_clk,p_clk.asBool())
+        poke(dut.io.pclk,p_clk.asBool())
         if(p_clk==false){
-          poke(dut.io.pixelIn,pixelIn.toInt)
+          poke(dut.io.pixelIn,pixelIn)
         }
         step(pclock/2)
         p_clk = !p_clk
-        poke(dut.io.p_clk,p_clk.asBool())
+        poke(dut.io.pclk,p_clk.asBool())
         step(pclock/2)
       }
       idx=idx+1
@@ -67,47 +70,55 @@ class capture_module_tester(dut:camera_module)(n:Int,imageFormat: Int) extends P
     step(scala.util.Random.nextInt(10))
     poke(dut.io.read_frame,true.B)
     step(1)
+
     var idx_out    = peek(dut.io.pixelAddr).toInt    // pixel_address
-    var refPixelVal= pixelStreamGenerator(idx_out,refFrame,imageFormat,true,1)
+    var refPixelVal= new referenceFrame().validate(idx_out,refFrame)
 
     if(imageFormat==1){
-      expect(dut.io.pixelOut,refPixelVal.toInt)
+      expect(dut.io.pixelOut,refPixelVal)
     }
     else {
-      expect(dut.io.pixelOut,refPixelVal.toInt )
+      expect(dut.io.pixelOut,refPixelVal )
     }
     poke(dut.io.read_frame,false.B)
     //step(1)
   }
   step(200)
 
+}
+class referenceFrame(){
 
-  def pixelStreamGenerator(idx:Int,refFrame: Array[Int],
-                           ImageFormat:Int, validate: Boolean,
-                           pclk: Int): Int ={
+  def generateRandomFrame(ImageResolution:Int, ImageFormat: Int): Array[Int]={
     if(ImageFormat==0){
-      if(validate){
-        return refFrame(idx)>>8
-      }
-      else {
-        return refFrame(idx)>>8
-      }
+      val refFrame=Array.fill(ImageResolution){scala.util.Random.nextInt(255)}
+      return refFrame
     }
     else {
-      if (validate) {
-        return refFrame(idx)
+      val refFrame=Array.fill(ImageResolution){scala.util.Random.nextInt(65535)}
+      return refFrame
+    }
+  }
+
+  def pixelStream(idx:Int,refFrame: Array[Int],
+                  ImageFormat:Int,
+                  pclk: Int): Int ={
+    if(ImageFormat==0){
+      return refFrame(idx)
+    }
+    else {
+      var firstByte = refFrame(idx)>>8
+      var secondByte = refFrame(idx)&0xFF
+      if (pclk == 0) {
+        return firstByte
       }
       else {
-        var firstByte = refFrame(idx)>>8
-        var secondByte = refFrame(idx)&0xFF
-        if (pclk == 0) {
-          return firstByte
-        }
-        else {
-          return secondByte
-        }
+        return secondByte
       }
     }
+  }
+
+  def validate(idx: Int , refFrame: Array[Int]): Int={
+    return refFrame(idx)
   }
 }
 
