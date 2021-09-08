@@ -1,8 +1,8 @@
-package chipyard.CPI_test
-import CPI.single_port_ram
+package chipyard.CPI_test.SingleClockCPITest
+
+import CPI.SingleClockCPI.single_port_ram
 import chisel3._
 import chisel3.iotesters._
-import chisel3.iotesters.Driver
 class single_port_ram_test(dut:single_port_ram[SInt]) extends PeekPokeTester(dut){
   val max_data_input_val=4020
   val mem_depth=2069

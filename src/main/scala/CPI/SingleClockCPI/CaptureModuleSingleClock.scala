@@ -1,17 +1,11 @@
-package CPI
-import chisel_tool.clean_code
+package CPI.SingleClockCPI
+
 import chisel3._
 import chisel3.util._
 
-//object clean extends App {
-//  val path="E://HDL//CHISEL projects//ANN_OV7670//src//main//scala//" +
-//    "chipyard//CPI//frame_buffer.scala"
-//  val clean=new clean_code().align_to_this_char_from_line_to_line(
-//    path,"(", 21,33)
-//}
 
-class camera_module(width: Int,
-                    height: Int)  extends Module {
+class CaptureModuleSingleClock(width: Int,
+                               height: Int)  extends Module {
   val w = width
   val h = height
   val bufferDepth = width * height // the maximum depth of the buffer
@@ -144,21 +138,4 @@ class camera_module(width: Int,
     rowCnt := 0.U
     colCnt := 0.U
   }
-}
-
-class single_port_ram[T <: Data](mem_depth: Int,
-                                 gen: T) extends Module {
-  val addr_width = log2Ceil(mem_depth)
-  val io = IO(new Bundle {
-    val addr     = Input(UInt(addr_width.W))
-    val data_in  = Input(gen)
-    val data_out = Output(gen)
-    val wrEna    = Input(Bool())
-    val rdEna    = Input(Bool())
-  })
-  val mem = SyncReadMem(mem_depth, gen)
-  when(io.wrEna) {
-    mem.write(io.addr, io.data_in)
-  }
-  io.data_out := mem.read(io.addr, io.rdEna)
 }

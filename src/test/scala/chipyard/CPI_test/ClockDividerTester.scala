@@ -1,9 +1,8 @@
 package chipyard.CPI_test
+
+import CPI.clock_divider_demo
 import chisel3._
-import chisel3.util._
-import chisel3.iotesters._
-import chisel3.iotesters.Driver
-import CPI.{clockDivider,clock_divider_demo}
+import chisel3.iotesters.{Driver, _}
 import org.scalatest._
 
 

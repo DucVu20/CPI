@@ -1,5 +1,6 @@
-package CPI
+package CPI.SingleClockCPI
 
+import CPI.{Rx_ver1, SCCB_interface, Tx}
 import chisel3._
 import chisel3.util._
 
@@ -12,7 +13,7 @@ class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
                  baudRate: Int) extends  Module {
   val MHz=scala.math.pow(10,6)
   // add modules
-  val frame_capture = Module(new camera_module(img_width, img_height))
+  val frame_capture = Module(new CaptureModuleSingleClock(img_width, img_height))
   val sccb_interface = Module(new SCCB_interface(CLK_FREQ_MHz, SCCB_FREQ_kHz))
   val receiver = Module(new Rx_ver1((CLK_FREQ_MHz*MHz).toInt, baudRate))
   val transmitter = Module(new Tx((CLK_FREQ_MHz*MHz).toInt, baudRate))

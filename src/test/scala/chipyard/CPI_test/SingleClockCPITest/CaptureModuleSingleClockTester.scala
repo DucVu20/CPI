@@ -1,12 +1,11 @@
-package chipyard.CPI_test
+package chipyard.CPI_test.SingleClockCPITest
 
-import CPI._
+import CPI.SingleClockCPI.CaptureModuleSingleClock
 import chisel3._
-import chisel3.iotesters.Driver
+import chisel3.iotesters.{Driver, _}
 import org.scalatest._
-import chisel3.iotesters._
 
-class capture_module_tester(dut:camera_module)(n:Int,imageFormat: Int) extends PeekPokeTester(dut) {
+class CaptureModuleSingleClockTester(dut:CaptureModuleSingleClock)(n:Int, imageFormat: Int) extends PeekPokeTester(dut) {
 
   val height = dut.h
   val width = dut.w
@@ -125,14 +124,14 @@ class referenceFrame(){
 class wave_of_capture_module extends FlatSpec with Matchers {
   "WaveformCounter" should "pass" in {
     Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new camera_module(20,10)){ c =>
-      new capture_module_tester(c)(4,0)
+      new CaptureModuleSingleClock(20,10)){ c =>
+      new CaptureModuleSingleClockTester(c)(4,0)
     } should be (true)
   }
 }
 
-object capture_module_tester extends App{
-  chisel3.iotesters.Driver(() => new camera_module(20,10)){ c=>
-    new capture_module_tester(c)(10,0)
+object CaptureModuleSingleClockTester extends App{
+  chisel3.iotesters.Driver(() => new CaptureModuleSingleClock(20,10)){ c=>
+    new CaptureModuleSingleClockTester(c)(10,0)
   }
 }

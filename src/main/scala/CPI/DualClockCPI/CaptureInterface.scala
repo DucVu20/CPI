@@ -1,20 +1,23 @@
-package CPI
+package CPI.DualClockCPI
+
+import CPI.clockDivider
 import chisel3._
 import chisel3.util._
 
-class captureInterface(bufferDepth: Int) extends Module{
+class CaptureInterface(bufferDepth: Int) extends Module{
   val io=IO(new Bundle{
-    val pclk         = Input (Clock())
+    val pclk          = Input (Clock())
     val href          = Input (Bool())
     val vsync         = Input (Bool())
     val pixelIn       = Input (UInt(8.W))
-    val pixelOut      = Output(UInt(16.W))  // remember to change to acquiredPixel
+    val pixelOut      = Output(UInt(16.W))  // remember to rename to acquiredPixel
     val frameDone     = Output(Bool())
     val frameWidth    = Output(UInt(log2Ceil(640).W))
     val frameHeight   = Output(UInt(log2Ceil(480).W))
     val imageFormat   = Input(UInt(1.W))
     val capture       = Input(Bool())
     val capturing     = Output(Bool())
+    val pixelValid    = Output(Bool())
   })
 
   withClock(io.pclk){
@@ -35,7 +38,6 @@ class captureInterface(bufferDepth: Int) extends Module{
     captureSignalHolder    := Mux(io.capture, io.capture, captureSignalHolder)
 
     //====================FMS for capturing images============================//
-
     switch(FMS) {
       is(idle) {
         when(io.vsync) {
@@ -51,16 +53,17 @@ class captureInterface(bufferDepth: Int) extends Module{
       }
       is(capture_frame) {
         capturing  := true.B
+        pixelValid := false.B
         frameDone  := Mux(io.vsync, true.B, false.B)
         FMS        := Mux(io.vsync, idle, capture_frame)
 
         when(io.href) {
           when(io.imageFormat===0.U){     //gray scale, 8 bit for 1 pixel
-            firstByte  := 0.U
-            secondByte  := io.pixelIn
-            colCnt      := colCnt + 1.U
+            firstByte          := 0.U
+            secondByte         := io.pixelIn
             bufferDepthCounter := bufferDepthCounter + 1.U
-
+            colCnt             := colCnt + 1.U
+            pixelValid         := true.B
           }otherwise {              // RGB 16 bit modes
             pixelIndex := (!pixelIndex)
             switch(pixelIndex) {
@@ -71,6 +74,7 @@ class captureInterface(bufferDepth: Int) extends Module{
                 secondByte         := io.pixelIn
                 colCnt             := colCnt + 1.U
                 bufferDepthCounter := bufferDepthCounter + 1.U
+                pixelValid         := true.B
               }
             }
           }
@@ -85,6 +89,7 @@ class captureInterface(bufferDepth: Int) extends Module{
       rowCnt := rowCnt + 1.U
       colCnt := 0.U
     }
+
     when(vsyncFallingEdge) {
       rowCnt := 0.U
       colCnt := 0.U
@@ -95,72 +100,46 @@ class captureInterface(bufferDepth: Int) extends Module{
     io.frameWidth  := colCnt
     io.frameHeight := rowCnt
     io.capturing   := capturing
+    io.pixelValid  := pixelValid
   }
-
 }
-class captureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
 
-  val w = imgWidth
-  val h = imgHeight
-  val bufferDepth = imgWidth * imgHeight // the maximum depth of the buffer
-  val pixelBits = 16
-
-  val io  = IO(new Bundle {
-    val pclk         = Input (Clock())
-    val href          = Input (Bool())
-    val vsync         = Input (Bool())
-    val pixelIn       = Input (UInt(8.W))
-
-    val pixelOut      = Output(UInt(pixelBits.W))
-    val pixelAddr     = Output(UInt(log2Ceil(bufferDepth).W))
-    val frameWidth    = Output(UInt(log2Ceil(640).W))
-    val frameHeight   = Output(UInt(log2Ceil(480).W))
-    val imageFormat   = Input(UInt(1.W))
-    val capture       = Input (Bool())
-    val capturing     = Output(Bool())
-    val read_frame    = Input (Bool()) // ready
-    val bufferStatus  = Output(Bool()) // valid
-    val frameDone     = Output(Bool())
+//=======================DEMO CAPTURE INTERFACE DUAL CLOCK==================//
+class CaptureInterfaceDemo(bufferDepth: Int,
+                           max_prescaler: Int ) extends Module {
+  val io = IO(new Bundle {
+    val pclk        = Input(Clock())
+    val href        = Input(Bool())
+    val vsync       = Input(Bool())
+    val pixelIn     = Input(UInt(8.W))
+    val pixelOut    = Output(UInt(16.W)) // remember to change to acquiredPixel
+    val frameDone   = Output(Bool())
+    val frameWidth  = Output(UInt(log2Ceil(640).W))
+    val frameHeight = Output(UInt(log2Ceil(480).W))
+    val imageFormat = Input(UInt(1.W))
+    val capture     = Input(Bool())
+    val capturing   = Output(Bool())
+    val pixelValid  = Output(Bool())
+    val prescaler   = Input(UInt(log2Ceil(max_prescaler).W))
   })
 
-  val dualClockBuffer    = Module(new DualClockRam(bufferDepth,UInt(pixelBits.W)))
-  val captureInterface = Module(new captureInterface(bufferDepth))
+  val clock_div = Module(new clockDivider(max_prescaler))
+  val capture_interface = Module(new CaptureInterface(bufferDepth))
 
-  val bufferFull          = RegInit(false.B)
-  val readPtr             = RegInit(0.U(log2Ceil(bufferDepth).W))
-  val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
+  clock_div.io.clock_in  := clock
+  clock_div.io.reset     := reset
+  clock_div.io.prescaler := io.prescaler
 
-  val wrEnaWire  = WireInit(false.B)
-
-  //=====================READ ADDRESS GENERATOR==================//
-  when(io.read_frame) {
-    readPtr    := readPtr + 1.U
-    when(readPtr === (bufferDepthCounter - 1.U)) {
-      readPtr            := 0.U
-      bufferDepthCounter := 0.U
-    }
-  }
-
-
-  //==============================IO=========================================//
-  captureInterface.io.pclk := io.pclk
-  captureInterface.io.pixelIn :=io.pixelIn
-  captureInterface.io.href  := io.href
-  captureInterface.io.vsync := io.vsync
-  captureInterface.io.capture :=io.capture
-  captureInterface.io.imageFormat := io.imageFormat
-
-  io.capturing  := captureInterface.io.capturing
-  io.frameWidth := captureInterface.io.frameWidth
-  io.frameHeight := captureInterface.io.frameHeight
-  io.frameDone   := captureInterface.io.frameDone
-  io.pixelAddr  := readPtr      // optional, generate to ease verifications
-  io.bufferStatus := bufferFull
-
-  dualClockBuffer.clock := clock
-  dualClockBuffer.io.writeClock := io.pclk
-  dualClockBuffer.io.dataIn     := captureInterface.io.pixelOut
-  dualClockBuffer.io.readAddr   := readPtr
-  dualClockBuffer.io.dataOut   := io.pixelOut
-
+  capture_interface.io.pclk        <> clock_div.io.divided_clock
+  capture_interface.io.href        <> io.href
+  capture_interface.io.vsync       <> io.vsync
+  capture_interface.io.pixelIn     <> io.pixelIn
+  capture_interface.io.pixelOut    <> io.pixelOut
+  capture_interface.io.frameDone   <> io.frameDone
+  capture_interface.io.frameWidth  <> io.frameWidth
+  capture_interface.io.frameHeight <> io.frameHeight
+  capture_interface.io.imageFormat <> io.imageFormat
+  capture_interface.io.capture     <> io.capture
+  capture_interface.io.capturing   <> io.capturing
+  capture_interface.io.pixelValid  <> io.pixelValid
 }

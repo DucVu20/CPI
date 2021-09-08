@@ -1,15 +1,14 @@
-package chipyard.CPI_test
+package chipyard.CPI_test.DualClockCPITest
 
+import CPI.DualClockCPI.{DualClockRam, DualClockRamDemo}
 import chisel3._
 import chisel3.util._
 import chisel3.iotesters._
 import chisel3.iotesters.Driver
 import org.scalatest._
-import CPI.DualClockRamDemo
 
 import scala.util.Random
 import scala.math.pow
-import CPI.DualClockRam
 
 
 class DualClockRamTester(dut: DualClockRamDemo[UInt]) extends PeekPokeTester(dut){

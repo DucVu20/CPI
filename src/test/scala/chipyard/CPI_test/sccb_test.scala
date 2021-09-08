@@ -1,10 +1,8 @@
 package chipyard.CPI_test
 
-import chisel3._
-import chisel3.util._
-import chisel3.iotesters._
-import chisel3.iotesters.Driver
 import CPI.SCCB_interface
+import chisel3._
+import chisel3.iotesters.{Driver, _}
 import org.scalatest._
 
 class SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCB_interface){
