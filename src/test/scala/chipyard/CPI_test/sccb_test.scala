@@ -18,12 +18,12 @@ class SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends Pee
     val config_data  = scala.util.Random.nextInt(255)
     poke(dut.io.control_address, control_addr)
     poke(dut.io.config_data, config_data)
-    poke(dut.io.config,false.B)
+    poke(dut.io.config,false)
 
     step(scala.util.Random.nextInt(10))
-    poke(dut.io.config,true.B)
+    poke(dut.io.config,true)
     step(1)
-    poke(dut.io.config,false.B)
+    poke(dut.io.config,false)
     step(1)
     var data_bit_idx=7
     val transmitted_slave_addr = Array.fill(8){0}
@@ -100,6 +100,6 @@ class SCCB_interface_waveform extends FlatSpec with Matchers {
 }
 object SCCB_interface_test extends App{
   chisel3.iotesters.Driver(() => new SCCB_interface(50, 100.2)){ c=>
-    new SCCB_interface_test(c)(728)
+    new SCCB_interface_test(c)(30)
   }
 }

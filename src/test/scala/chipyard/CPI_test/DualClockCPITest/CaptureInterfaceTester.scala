@@ -13,7 +13,7 @@ class CaptureInterfaceTester(dut: CaptureInterfaceDemo)
 
   val prescaler = 32
   poke(dut.io.prescaler,prescaler)
-  step(200)
+  step(197)
 
   //====================synthesized timing========================//
   val tp = prescaler

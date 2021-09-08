@@ -4,7 +4,6 @@ import CPI.clockDivider
 import chisel3._
 import chisel3.util._
 
-
 class CaptureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
 
   val w = imgWidth
@@ -33,44 +32,75 @@ class CaptureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
   val dualClockBuffer    = Module(new DualClockRam(bufferDepth,UInt(pixelBits.W)))
   val captureInterface = Module(new CaptureInterface(bufferDepth))
 
-  val bufferFull          = RegInit(false.B)
+  val bufferStatus        = RegInit(false.B)
   val readPtr             = RegInit(0.U(log2Ceil(bufferDepth).W))
   val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
-  val frameDepth          = RegInit(0.U(log2Ceil(bufferDepth).W))
+  val captureSignalHolder = RegInit(false.B)
 
-  val pixelValid          = Wire(captureInterface.io.pixelValid)
+  //============keep the capture signal until href is available=========//
+  captureSignalHolder    := Mux(io.capture, io.capture, captureSignalHolder)
+  when(captureSignalHolder & io.href){
+    captureSignalHolder  := false.B
+  }
 
   //=====================READ ADDRESS GENERATOR==================//
   when(io.read_frame) {
     readPtr    := readPtr + 1.U
     when(readPtr === (bufferDepthCounter - 1.U)) {
       readPtr            := 0.U
+      bufferStatus       := false.B
       bufferDepthCounter := 0.U
     }
   }
+  //====================status register=====================//
+  val sample :: keep::Nil=Enum(2)
+  val bufferStatusFMS=RegInit(sample)
+  switch(bufferStatusFMS){
+    is(sample){
+      when(captureInterface.io.frameDone){
+        bufferStatus    := captureInterface.io.frameDone
+        bufferStatusFMS := keep
+      }
+    }
+    is(keep){
+      when((!captureInterface.io.frameDone)){
+        bufferStatusFMS :=sample
+      }
+    }
+  }
 
-  //==============================IO=========================================//
-  captureInterface.io.pclk := io.pclk
-  captureInterface.io.pixelIn :=io.pixelIn
-  captureInterface.io.href  := io.href
-  captureInterface.io.vsync := io.vsync
-  captureInterface.io.capture :=io.capture
-  captureInterface.io.imageFormat := io.imageFormat
+  //===================capture interface - buffer wire connection==================/
+  when((captureInterface.io.frameDone)){
+    bufferDepthCounter := captureInterface.io.pixelAddress
+  }
 
-  io.capturing  := captureInterface.io.capturing
-  io.frameWidth := captureInterface.io.frameWidth
-  io.frameHeight := captureInterface.io.frameHeight
-  io.frameDone   := captureInterface.io.frameDone
-  io.pixelAddr  := readPtr      // optional, generate to ease verifications
-  io.bufferStatus := bufferFull
-
-  dualClockBuffer.clock := clock
   dualClockBuffer.io.writeClock := io.pclk
   dualClockBuffer.io.dataIn     := captureInterface.io.pixelOut
   dualClockBuffer.io.readAddr   := readPtr
-  dualClockBuffer.io.dataOut   := io.pixelOut
-}
+  dualClockBuffer.io.wrAddr     := captureInterface.io.pixelAddress
+  dualClockBuffer.io.wrEna      := captureInterface.io.pixelValid
+  dualClockBuffer.clock         := clock
 
+
+  io.pixelOut  := (dualClockBuffer.io.dataOut)
+
+  //========================capture interface - IO signals===========================//
+  captureInterface.io.pclk        := io.pclk
+  captureInterface.io.href        := io.href
+  captureInterface.io.vsync       := io.vsync
+  captureInterface.io.capture     := captureSignalHolder
+  captureInterface.io.pixelIn     := io.pixelIn
+  captureInterface.io.imageFormat := io.imageFormat
+
+  io.capturing   := captureInterface.io.capturing
+  io.frameWidth  := captureInterface.io.frameWidth
+  io.frameHeight := captureInterface.io.frameHeight
+  io.frameDone   := captureInterface.io.frameDone
+
+  io.pixelAddr    := RegNext(RegNext(readPtr))      // optional, generate to ease verifications
+  io.bufferStatus := bufferStatus
+
+}
 
 //========================DEMO CAPTURE MODULE DUAL CLOCK DEMO========================//
 class CaptureModuleDualClockDemo(width: Int,
@@ -114,8 +144,8 @@ class CaptureModuleDualClockDemo(width: Int,
   capture_module.io.capture     <> io.capture
   capture_module.io.capturing   <> io.capturing
 
-  io.pixelOut <> capture_module.io.pixelOut
-  io.pixelAddr <> capture_module.io.pixelAddr
-  io.read_frame <> capture_module.io.read_frame
+  io.pixelOut     <> capture_module.io.pixelOut
+  io.pixelAddr    <> capture_module.io.pixelAddr
+  io.read_frame   <> capture_module.io.read_frame
   io.bufferStatus <> capture_module.io.bufferStatus
 }

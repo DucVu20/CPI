@@ -18,6 +18,7 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     val capture       = Input(Bool())
     val capturing     = Output(Bool())
     val pixelValid    = Output(Bool())
+    val pixelAddress  = Output(UInt(log2Ceil(bufferDepth).W))
   })
 
   withClock(io.pclk){
@@ -32,10 +33,7 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
     val frameDone           = RegInit(false.B)
     val pixelValid          = RegInit(false.B)
-    val captureSignalHolder = RegInit(false.B)
     val capturing           = WireInit(false.B)
-
-    captureSignalHolder    := Mux(io.capture, io.capture, captureSignalHolder)
 
     //====================FMS for capturing images============================//
     switch(FMS) {
@@ -43,17 +41,18 @@ class CaptureInterface(bufferDepth: Int) extends Module{
         when(io.vsync) {
           FMS := idle
         }.otherwise {
-          when(captureSignalHolder) {
+          when(io.capture) {
             FMS                 := capture_frame
-            captureSignalHolder := false.B
             frameDone           := false.B
+            bufferDepthCounter  := 0.U
           }
         }
         capturing := false.B
+        pixelValid := false.B
       }
       is(capture_frame) {
         capturing  := true.B
-        pixelValid := false.B
+       // pixelValid := false.B
         frameDone  := Mux(io.vsync, true.B, false.B)
         FMS        := Mux(io.vsync, idle, capture_frame)
 
@@ -69,6 +68,7 @@ class CaptureInterface(bufferDepth: Int) extends Module{
             switch(pixelIndex) {
               is(0.U) {
                 firstByte  := io.pixelIn
+                pixelValid := false.B
               }
               is(1.U) {
                 secondByte         := io.pixelIn
@@ -78,6 +78,8 @@ class CaptureInterface(bufferDepth: Int) extends Module{
               }
             }
           }
+        }.otherwise{
+          pixelValid := false.B
         }
       }
     }
@@ -95,12 +97,13 @@ class CaptureInterface(bufferDepth: Int) extends Module{
       colCnt := 0.U
     }
     //=========================output wire connection=========================//
-    io.pixelOut    := pixel
-    io.frameDone   := frameDone
-    io.frameWidth  := colCnt
-    io.frameHeight := rowCnt
-    io.capturing   := capturing
-    io.pixelValid  := pixelValid
+    io.pixelOut     := pixel
+    io.frameDone    := frameDone
+    io.frameWidth   := colCnt
+    io.frameHeight  := rowCnt
+    io.capturing    := capturing
+    io.pixelValid   := pixelValid
+    io.pixelAddress := RegNext(bufferDepthCounter)
   }
 }
 
@@ -120,6 +123,7 @@ class CaptureInterfaceDemo(bufferDepth: Int,
     val capture     = Input(Bool())
     val capturing   = Output(Bool())
     val pixelValid  = Output(Bool())
+    val pixelAddress  = Output(UInt(log2Ceil(bufferDepth).W))
     val prescaler   = Input(UInt(log2Ceil(max_prescaler).W))
   })
 
@@ -142,4 +146,5 @@ class CaptureInterfaceDemo(bufferDepth: Int,
   capture_interface.io.capture     <> io.capture
   capture_interface.io.capturing   <> io.capturing
   capture_interface.io.pixelValid  <> io.pixelValid
+  capture_interface.io.pixelAddress <> io.pixelAddress
 }
