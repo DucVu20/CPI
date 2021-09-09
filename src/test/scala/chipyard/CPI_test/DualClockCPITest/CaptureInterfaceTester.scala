@@ -1,6 +1,6 @@
 package chipyard.CPI_test.DualClockCPITest
 
-import CPI.DualClockCPI.CaptureInterfaceDemo
+import CPI.DualClockCPI.{CaptureInterfaceDemo}
 import chipyard.CPI_test.SingleClockCPITest.referenceFrame
 import chisel3._
 import chisel3.iotesters.Driver
@@ -28,12 +28,13 @@ class CaptureInterfaceTester(dut: CaptureInterfaceDemo)
     poke(dut.io.capture, true.B)
     step(prescaler)
 
-    poke(dut.io.capture, false.B)
     poke(dut.io.vsync, true.B)
     poke(dut.io.href, false.B)
     step(t_line)
     poke(dut.io.vsync, false.B)
     poke(dut.io.href, false.B)
+    step(prescaler)
+    poke(dut.io.capture, false.B)
     step(17 * t_line)
     var idx = 0
     var p_clk = true
@@ -47,9 +48,7 @@ class CaptureInterfaceTester(dut: CaptureInterfaceDemo)
 
           poke(dut.io.pixelIn,pixelIn)
 
-          for(clock<- 0 until(prescaler)){
-            step(1)
-          }
+          step(prescaler)
         }
         var refPixel = new referenceFrame().validate(idx, refFrame)
         expect(dut.io.pixelOut,refPixel)
@@ -62,18 +61,18 @@ class CaptureInterfaceTester(dut: CaptureInterfaceDemo)
   }
 }
 
-class WaveformCaptureInterface extends FlatSpec with Matchers {
-  "WaveformCounter" should "pass" in {
-    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new CaptureInterfaceDemo(50*50,64)){ c =>
-      new CaptureInterfaceTester(c)(50,50)
-    } should be (true)
-  }
-}
+//class WaveformCaptureInterface extends FlatSpec with Matchers {
+//  "WaveformCounter" should "pass" in {
+//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+//      new CaptureInterfaceDemo(50*50,64)){ c =>
+//      new CaptureInterfaceTester(c)(50,50)
+//    } should be (true)
+//  }
+//}
 
 object CaptureInterfaceTester extends App{
   chisel3.iotesters.Driver(() => new CaptureInterfaceDemo(
-    50*50,4)){ c=>
+    50*50,64)){ c=>
     new CaptureInterfaceTester(c)(50,50)
   }
 }

@@ -1,0 +1,160 @@
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:3:8: not found: object CPI[0m
+[0m[[0m[31merror[0m] [0m[0mimport CPI.clock_divider_demo[0m
+[0m[[0m[31merror[0m] [0m[0m       ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:4:8: not found: object chisel3[0m
+[0m[[0m[31merror[0m] [0m[0mimport chisel3._[0m
+[0m[[0m[31merror[0m] [0m[0m       ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:5:8: not found: object chisel3[0m
+[0m[[0m[31merror[0m] [0m[0mimport chisel3.iotesters.{Driver, _}[0m
+[0m[[0m[31merror[0m] [0m[0m       ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:6:12: object scalatest is not a member of package org[0m
+[0m[[0m[31merror[0m] [0m[0mimport org.scalatest._[0m
+[0m[[0m[31merror[0m] [0m[0m           ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:9:59: not found: type PeekPokeTester[0m
+[0m[[0m[31merror[0m] [0m[0mclass clock_divider_test (dut:clock_divider_demo) extends PeekPokeTester(dut){[0m
+[0m[[0m[31merror[0m] [0m[0m                                                          ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:9:31: not found: type clock_divider_demo[0m
+[0m[[0m[31merror[0m] [0m[0mclass clock_divider_test (dut:clock_divider_demo) extends PeekPokeTester(dut){[0m
+[0m[[0m[31merror[0m] [0m[0m                              ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:9:74: no arguments allowed for nullary constructor Object: ()Object[0m
+[0m[[0m[31merror[0m] [0m[0mclass clock_divider_test (dut:clock_divider_demo) extends PeekPokeTester(dut){[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                         ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:12:3: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m  step(50)[0m
+[0m[[0m[31merror[0m] [0m[0m  ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:14:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.prescaler,i)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:15:5: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m    step(2000)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:16:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.reset,true.B)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:16:28: value B is not a member of Boolean[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.reset,true.B)[0m
+[0m[[0m[31merror[0m] [0m[0m                           ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:17:5: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m    step(200)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:18:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.reset,false.B)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:18:29: value B is not a member of Boolean[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.reset,false.B)[0m
+[0m[[0m[31merror[0m] [0m[0m                            ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:19:5: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m    step(1)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:23:42: not found: type FlatSpec[0m
+[0m[[0m[31merror[0m] [0m[0mclass clock_divider_CPI_waveform extends FlatSpec with Matchers {[0m
+[0m[[0m[31merror[0m] [0m[0m                                         ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:23:56: not found: type Matchers[0m
+[0m[[0m[31merror[0m] [0m[0mclass clock_divider_CPI_waveform extends FlatSpec with Matchers {[0m
+[0m[[0m[31merror[0m] [0m[0m                                                       ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:24:21: value should is not a member of String[0m
+[0m[[0m[31merror[0m] [0m[0m  "WaveformCounter" should "pass" in {[0m
+[0m[[0m[31merror[0m] [0m[0m                    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:25:5: not found: value Driver[0m
+[0m[[0m[31merror[0m] [0m[0m    Driver.execute(Array("--generate-vcd-output", "on"), () =>[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:26:11: not found: type clock_divider_demo[0m
+[0m[[0m[31merror[0m] [0m[0m      new clock_divider_demo(512)) { c =>[0m
+[0m[[0m[31merror[0m] [0m[0m          ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\ClockDividerTester.scala:28:14: not found: value be[0m
+[0m[[0m[31merror[0m] [0m[0m    } should be (true)[0m
+[0m[[0m[31merror[0m] [0m[0m             ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:3:8: not found: object CPI[0m
+[0m[[0m[31merror[0m] [0m[0mimport CPI.SCCB_interface[0m
+[0m[[0m[31merror[0m] [0m[0m       ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:4:8: not found: object chisel3[0m
+[0m[[0m[31merror[0m] [0m[0mimport chisel3._[0m
+[0m[[0m[31merror[0m] [0m[0m       ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:5:8: not found: object chisel3[0m
+[0m[[0m[31merror[0m] [0m[0mimport chisel3.iotesters.{Driver, _}[0m
+[0m[[0m[31merror[0m] [0m[0m       ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:6:12: object scalatest is not a member of package org[0m
+[0m[[0m[31merror[0m] [0m[0mimport org.scalatest._[0m
+[0m[[0m[31merror[0m] [0m[0m           ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:8:78: not found: type PeekPokeTester[0m
+[0m[[0m[31merror[0m] [0m[0mclass SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCB_interface){[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                             ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:8:31: not found: type SCCB_interface[0m
+[0m[[0m[31merror[0m] [0m[0mclass SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCB_interface){[0m
+[0m[[0m[31merror[0m] [0m[0m                              ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:8:96: no arguments allowed for nullary constructor Object: ()Object[0m
+[0m[[0m[31merror[0m] [0m[0mclass SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCB_interface){[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                                               ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:10:3: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m  poke(dut.io.config,false)[0m
+[0m[[0m[31merror[0m] [0m[0m  ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:11:3: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m  step(1000)[0m
+[0m[[0m[31merror[0m] [0m[0m  ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:19:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.control_address, control_addr)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:20:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.config_data, config_data)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:21:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.config,false)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:23:5: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m    step(scala.util.Random.nextInt(10))[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:24:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.config,true)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:25:5: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m    step(1)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:26:5: not found: value poke[0m
+[0m[[0m[31merror[0m] [0m[0m    poke(dut.io.config,false)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:27:5: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m    step(1)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:35:11: not found: value peek[0m
+[0m[[0m[31merror[0m] [0m[0m    while(peek(dut.io.sccb_ready)==0){[0m
+[0m[[0m[31merror[0m] [0m[0m          ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:37:28: not found: value peek[0m
+[0m[[0m[31merror[0m] [0m[0m      var c_low=(!int2bool(peek(dut.io.SIOC).toInt))[0m
+[0m[[0m[31merror[0m] [0m[0m                           ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:38:7: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m      step(1)[0m
+[0m[[0m[31merror[0m] [0m[0m      ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:39:29: not found: value peek[0m
+[0m[[0m[31merror[0m] [0m[0m      var c_high=(!int2bool(peek(dut.io.SIOC).toInt))[0m
+[0m[[0m[31merror[0m] [0m[0m                            ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:42:29: not found: value peek[0m
+[0m[[0m[31merror[0m] [0m[0m        var SIOD=(!int2bool(peek(dut.io.SIOD).toInt))[0m
+[0m[[0m[31merror[0m] [0m[0m                            ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:62:5: not found: value step[0m
+[0m[[0m[31merror[0m] [0m[0m    step(2000)[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:93:39: not found: type FlatSpec[0m
+[0m[[0m[31merror[0m] [0m[0mclass SCCB_interface_waveform extends FlatSpec with Matchers {[0m
+[0m[[0m[31merror[0m] [0m[0m                                      ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:93:53: not found: type Matchers[0m
+[0m[[0m[31merror[0m] [0m[0mclass SCCB_interface_waveform extends FlatSpec with Matchers {[0m
+[0m[[0m[31merror[0m] [0m[0m                                                    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:94:21: value should is not a member of String[0m
+[0m[[0m[31merror[0m] [0m[0m  "WaveformCounter" should "pass" in {[0m
+[0m[[0m[31merror[0m] [0m[0m                    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:95:5: not found: value Driver[0m
+[0m[[0m[31merror[0m] [0m[0m    Driver.execute(Array("--generate-vcd-output", "on"), () =>[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:96:11: not found: type SCCB_interface[0m
+[0m[[0m[31merror[0m] [0m[0m      new SCCB_interface(50, 100.2 )) { c =>[0m
+[0m[[0m[31merror[0m] [0m[0m          ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:98:14: not found: value be[0m
+[0m[[0m[31merror[0m] [0m[0m    } should be (true)[0m
+[0m[[0m[31merror[0m] [0m[0m             ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:102:3: not found: value chisel3[0m
+[0m[[0m[31merror[0m] [0m[0m  chisel3.iotesters.Driver(() => new SCCB_interface(50, 100.2)){ c=>[0m
+[0m[[0m[31merror[0m] [0m[0m  ^[0m
+[0m[[0m[31merror[0m] [0m[0mE:\HDL\CHISEL projects\CPI\src\test\scala\chipyard\CPI_test\sccb_test.scala:102:38: not found: type SCCB_interface[0m
+[0m[[0m[31merror[0m] [0m[0m  chisel3.iotesters.Driver(() => new SCCB_interface(50, 100.2)){ c=>[0m
+[0m[[0m[31merror[0m] [0m[0m                                     ^[0m
+[0m[[0m[31merror[0m] [0m[0m53 errors found[0m

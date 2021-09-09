@@ -47,14 +47,14 @@ class DualClockRamTester(dut: DualClockRamDemo[UInt]) extends PeekPokeTester(dut
   }
 
 }
-class WaveformDualClockRAM extends FlatSpec with Matchers {
-  "WaveformSinglePortRAM" should "pass" in {
-    Driver.execute(Array("--generate-vcd-output", "on"),
-      () => new DualClockRamDemo(1024, UInt(16.W))) {
-      c => new DualClockRamTester(c)
-    } should be (true)
-  }
-}
+//class WaveformDualClockRAM extends FlatSpec with Matchers {
+//  "WaveformSinglePortRAM" should "pass" in {
+//    Driver.execute(Array("--generate-vcd-output", "on"),
+//      () => new DualClockRamDemo(1024, UInt(16.W))) {
+//      c => new DualClockRamTester(c)
+//    } should be (true)
+//  }
+//}
 object TestSinglePortUIntRAM extends App {
   chisel3.iotesters.Driver(() =>
     new DualClockRamDemo(1024, UInt(8.W))) {

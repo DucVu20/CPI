@@ -56,6 +56,6 @@ import scala.language.experimental.macros
 
 
 object play_around extends App{
-  println(System.getProperty("user.dir"))
+  println("Hello Vu D. Le")
 
 }

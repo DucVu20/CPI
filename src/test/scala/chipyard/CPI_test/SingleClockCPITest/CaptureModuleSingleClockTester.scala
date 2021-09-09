@@ -121,14 +121,14 @@ class referenceFrame(){
   }
 }
 
-class wave_of_capture_module extends FlatSpec with Matchers {
-  "WaveformCounter" should "pass" in {
-    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new CaptureModuleSingleClock(20,10)){ c =>
-      new CaptureModuleSingleClockTester(c)(4,0)
-    } should be (true)
-  }
-}
+//class wave_of_capture_module extends FlatSpec with Matchers {
+//  "WaveformCounter" should "pass" in {
+//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+//      new CaptureModuleSingleClock(20,10)){ c =>
+//      new CaptureModuleSingleClockTester(c)(4,0)
+//    } should be (true)
+//  }
+//}
 
 object CaptureModuleSingleClockTester extends App{
   chisel3.iotesters.Driver(() => new CaptureModuleSingleClock(20,10)){ c=>
