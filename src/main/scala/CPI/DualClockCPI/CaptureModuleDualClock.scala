@@ -38,11 +38,25 @@ class CaptureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
   val captureSignalHolder = RegInit(false.B)
 
   //============keep the capture signal until href is available=========//
-  captureSignalHolder    := Mux(io.capture, io.capture, captureSignalHolder)
-  when(captureSignalHolder & io.href){
-    captureSignalHolder  := false.B
-  }
+  val sample :: keep::Nil=Enum(2)
 
+  val captureSignalFMS = RegInit(keep)
+  switch(captureSignalFMS){
+    is(sample){
+      captureSignalHolder    := Mux(io.capture, io.capture, captureSignalHolder)
+
+      when(captureInterface.io.FMS.asBool){
+        captureSignalHolder := false.B
+        captureSignalFMS := keep
+      }
+    }
+    is(keep){
+      captureSignalHolder    := Mux(io.capture, io.capture, captureSignalHolder)
+      when(captureInterface.io.FMS===0.U){
+        captureSignalFMS := sample
+      }
+    }
+  }
   //=====================READ ADDRESS GENERATOR==================//
   when(io.read_frame) {
     readPtr    := readPtr + 1.U
@@ -53,7 +67,6 @@ class CaptureModuleDualClock(imgWidth: Int, imgHeight: Int) extends Module{
     }
   }
   //====================status register=====================//
-  val sample :: keep::Nil=Enum(2)
   val bufferStatusFMS=RegInit(sample)
   switch(bufferStatusFMS){
     is(sample){

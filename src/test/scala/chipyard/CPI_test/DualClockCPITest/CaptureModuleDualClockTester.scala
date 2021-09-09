@@ -9,7 +9,7 @@ import chipyard.CPI_test.SingleClockCPITest.referenceFrame
 class CaptureModuleDualClockTester(dut: CaptureModuleDualClockDemo)
                                   (width:Int,height: Int
                                   )extends PeekPokeTester(dut){
-  val prescaler = 3
+  val prescaler = 4
 
   poke(dut.io.prescaler,prescaler)
   step(197)
@@ -54,6 +54,7 @@ class CaptureModuleDualClockTester(dut: CaptureModuleDualClockDemo)
         var refPixel = new referenceFrame().validate(idx, refFrame)
         idx = idx + 1
       }
+
       poke(dut.io.href, false.B)
       step(20 * tp)
     }
@@ -63,6 +64,10 @@ class CaptureModuleDualClockTester(dut: CaptureModuleDualClockDemo)
     step(t_line)
     poke(dut.io.vsync,false)
     step(300)
+
+    poke(dut.io.capture,true)
+    step(2)
+    poke(dut.io.capture, false)
     //====================verify=============================//
     var idx1=0
     while(peek(dut.io.bufferStatus)==1){
@@ -77,13 +82,15 @@ class CaptureModuleDualClockTester(dut: CaptureModuleDualClockDemo)
   }
   step(100)
   Console.out.println(Console.BLUE+"the total number of tests must be passed" +
-    " is "+Console.YELLOW+ (width*height*2).toInt + Console.RESET )
+    " is "+Console.YELLOW+ (width*height*2).toInt + Console.BLUE + " for 2 RGB " +
+    "and gray scale images with the resolution of " + width.toString +"x" +
+    height.toString+ Console.RESET )
 }
 class WaveformCaptureModuleDualClock extends FlatSpec with Matchers {
   "WaveformCounter" should "pass" in {
     Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new CaptureModuleDualClockDemo(50,50,64)){ c =>
-      new CaptureModuleDualClockTester(c)(50,50)
+      new CaptureModuleDualClockDemo(120,120,64)){ c =>
+      new CaptureModuleDualClockTester(c)(120,120)
     } should be (true)
   }
 }

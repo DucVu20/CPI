@@ -19,6 +19,7 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     val capturing     = Output(Bool())
     val pixelValid    = Output(Bool())
     val pixelAddress  = Output(UInt(log2Ceil(bufferDepth).W))
+    val FMS           = Output(UInt(1.W))
   })
 
   withClock(io.pclk){
@@ -35,6 +36,8 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     val pixelValid          = RegInit(false.B)
     val capturing           = WireInit(false.B)
 
+    val vsyncFallingEdge  = (!io.vsync) & (RegNext(io.vsync))
+
     //====================FMS for capturing images============================//
     switch(FMS) {
       is(idle) {
@@ -42,9 +45,11 @@ class CaptureInterface(bufferDepth: Int) extends Module{
           FMS := idle
         }.otherwise {
           when(io.capture) {
-            FMS                 := capture_frame
-            frameDone           := false.B
-            bufferDepthCounter  := 0.U
+            when(vsyncFallingEdge){
+              FMS                 := capture_frame
+              frameDone           := false.B
+              bufferDepthCounter  := 0.U
+            }
           }
         }
         capturing := false.B
@@ -52,7 +57,6 @@ class CaptureInterface(bufferDepth: Int) extends Module{
       }
       is(capture_frame) {
         capturing  := true.B
-       // pixelValid := false.B
         frameDone  := Mux(io.vsync, true.B, false.B)
         FMS        := Mux(io.vsync, idle, capture_frame)
 
@@ -85,7 +89,6 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     }
     //====================resolution counter===============//
     val hrefRisingEdge    = io.href & (!RegNext(io.href))
-    val vsyncFallingEdge  = RegNext(io.vsync) & (!io.vsync)
 
     when(hrefRisingEdge) {
       rowCnt := rowCnt + 1.U
@@ -104,6 +107,7 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     io.capturing    := capturing
     io.pixelValid   := pixelValid
     io.pixelAddress := RegNext(bufferDepthCounter)
+    io.FMS          := FMS
   }
 }
 
