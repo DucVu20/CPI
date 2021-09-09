@@ -20,11 +20,12 @@ class clock_divider_test (dut:clock_divider_demo) extends PeekPokeTester(dut){
   }
 }
 
-class clock_divider_CPI_waveform extends FlatSpec with Matchers {
-  "WaveformCounter" should "pass" in {
-    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new clock_divider_demo(512)) { c =>
-      new clock_divider_test (c)
-    } should be (true)
-  }
-}
+//class clock_divider_CPI_waveform extends FlatSpec with Matchers {
+//  "WaveformCounter" should "pass" in {
+//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+//      new clock_divider_demo(512)) { c =>
+//      new clock_divider_test (c)
+//    } should be (true)
+//  }
+//}
+

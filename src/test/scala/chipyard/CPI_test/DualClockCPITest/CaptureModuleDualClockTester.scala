@@ -97,7 +97,16 @@ class CaptureModuleDualClockTester(dut: CaptureModuleDualClockDemo)
 
 object CaptureModuleDualClockTester extends App{
   chisel3.iotesters.Driver(() => new CaptureModuleDualClockDemo(
-    50,50,4)){ c=>
+    120,120,4)){ c=>
     new CaptureModuleDualClockTester(c)(120,120)
   }
 }
+class CaptureModuleDualClockSpec extends FlatSpec with Matchers {
+  "CaptureModule" should "pass" in {
+    chisel3.iotesters.Driver (() => new CaptureModuleDualClockDemo(
+      120,120,4)) { c =>
+      new CaptureModuleDualClockTester(c)(120,120)
+    } should be (true)
+  }
+}
+

@@ -55,9 +55,17 @@ class DualClockRamTester(dut: DualClockRamDemo[UInt]) extends PeekPokeTester(dut
 //    } should be (true)
 //  }
 //}
-object TestSinglePortUIntRAM extends App {
+object DualClockRamTester extends App {
   chisel3.iotesters.Driver(() =>
     new DualClockRamDemo(1024, UInt(8.W))) {
     c => new DualClockRamTester(c)
+  }
+}
+class DualClockRamSpec extends FlatSpec with Matchers {
+  "DualClockRam" should "pass" in {
+    chisel3.iotesters.Driver (() => new DualClockRamDemo(
+      1024,UInt(8.W))) { c =>
+      new DualClockRamTester(c)
+    } should be (true)
   }
 }

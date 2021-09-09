@@ -76,3 +76,11 @@ object CaptureInterfaceTester extends App{
     new CaptureInterfaceTester(c)(50,50)
   }
 }
+class CaptureInterfaceSpec extends FlatSpec with Matchers {
+    "CaptureInterface" should "pass" in {
+    chisel3.iotesters.Driver (() => new CaptureInterfaceDemo(
+      50*50,64)) { c =>
+      new CaptureInterfaceTester(c)(50,50)
+    } should be (true)
+  }
+}

@@ -103,3 +103,11 @@ object SCCB_interface_test extends App{
     new SCCB_interface_test(c)(30)
   }
 }
+class SCCBInterfaceSpec extends FlatSpec with Matchers {
+  "SCCB Interface" should "pass" in {
+    chisel3.iotesters.Driver (() => new SCCB_interface(
+      50,100.2)) { c =>
+      new SCCB_interface_test(c)(600)
+    } should be (true)
+  }
+}

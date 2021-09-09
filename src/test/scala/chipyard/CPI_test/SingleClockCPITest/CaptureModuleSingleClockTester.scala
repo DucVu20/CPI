@@ -135,3 +135,19 @@ object CaptureModuleSingleClockTester extends App{
     new CaptureModuleSingleClockTester(c)(10,0)
   }
 }
+class CaptureModuleSingleClockGraySpec extends FlatSpec with Matchers {
+  "Capture Module Single Clock Gray Scale" should "pass" in {
+    chisel3.iotesters.Driver (() => new CaptureModuleSingleClock(
+      100,100)) { c =>
+      new CaptureModuleSingleClockTester(c)(5,0)
+    } should be (true)
+  }
+}
+class CaptureModuleSingleClockRGBSpec extends FlatSpec with Matchers {
+  "Capture Module Single Clock RGB image" should "pass" in {
+    chisel3.iotesters.Driver (() => new CaptureModuleSingleClock(
+      100,100)) { c =>
+      new CaptureModuleSingleClockTester(c)(5,1)
+    } should be (true)
+  }
+}
