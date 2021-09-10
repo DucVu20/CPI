@@ -121,25 +121,26 @@ class referenceFrame(){
   }
 }
 
-//class wave_of_capture_module extends FlatSpec with Matchers {
-//  "WaveformCounter" should "pass" in {
-//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-//      new CaptureModuleSingleClock(20,10)){ c =>
-//      new CaptureModuleSingleClockTester(c)(4,0)
-//    } should be (true)
-//  }
-//}
+class wave_of_capture_module extends FlatSpec with Matchers {
+  "WaveformCounter" should "pass" in {
+    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+      new CaptureModuleSingleClock(20,10)){ c =>
+      new CaptureModuleSingleClockTester(c)(4,0)
+    } should be (true)
+  }
+}
 
 object CaptureModuleSingleClockTester extends App{
-  chisel3.iotesters.Driver(() => new CaptureModuleSingleClock(20,10)){ c=>
-    new CaptureModuleSingleClockTester(c)(10,0)
+  chisel3.iotesters.Driver(() => new CaptureModuleSingleClock(
+    20,10)){ c=>
+    new CaptureModuleSingleClockTester(c)(4,0)
   }
 }
 class CaptureModuleSingleClockGraySpec extends FlatSpec with Matchers {
   "Capture Module Single Clock Gray Scale" should "pass" in {
     chisel3.iotesters.Driver (() => new CaptureModuleSingleClock(
       100,100)) { c =>
-      new CaptureModuleSingleClockTester(c)(5,0)
+      new CaptureModuleSingleClockTester(c)(4,0)
     } should be (true)
   }
 }
@@ -147,7 +148,7 @@ class CaptureModuleSingleClockRGBSpec extends FlatSpec with Matchers {
   "Capture Module Single Clock RGB image" should "pass" in {
     chisel3.iotesters.Driver (() => new CaptureModuleSingleClock(
       100,100)) { c =>
-      new CaptureModuleSingleClockTester(c)(5,1)
+      new CaptureModuleSingleClockTester(c)(4,1)
     } should be (true)
   }
 }

@@ -20,6 +20,10 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     val pixelValid    = Output(Bool())
     val pixelAddress  = Output(UInt(log2Ceil(bufferDepth).W))
     val FMS           = Output(UInt(1.W))
+
+    val pixelIndex  = Output(UInt(1.W))   // peek out for testing
+
+
   })
 
   withClock(io.pclk){
@@ -27,7 +31,6 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     val FMS=RegInit(idle)
     val firstByte           = RegInit(0.U(8.W))
     val secondByte          = RegInit(0.U(8.W))
-    val pixel               = Cat(firstByte,secondByte)
     val pixelIndex          = RegInit(0.U((1.W)))
     val rowCnt              = RegInit(0.U(log2Ceil(480).W))
     val colCnt              = RegInit(0.U(log2Ceil(640).W))
@@ -52,7 +55,7 @@ class CaptureInterface(bufferDepth: Int) extends Module{
             }
           }
         }
-        capturing := false.B
+        capturing  := false.B
         pixelValid := false.B
       }
       is(capture_frame) {
@@ -100,7 +103,7 @@ class CaptureInterface(bufferDepth: Int) extends Module{
       colCnt := 0.U
     }
     //=========================output wire connection=========================//
-    io.pixelOut     := pixel
+    io.pixelOut     := Cat(firstByte, secondByte)
     io.frameDone    := frameDone
     io.frameWidth   := colCnt
     io.frameHeight  := rowCnt
@@ -108,6 +111,9 @@ class CaptureInterface(bufferDepth: Int) extends Module{
     io.pixelValid   := pixelValid
     io.pixelAddress := RegNext(bufferDepthCounter)
     io.FMS          := FMS
+
+    io.pixelIndex  := pixelIndex // peek out for testing
+
   }
 }
 
@@ -129,12 +135,15 @@ class CaptureInterfaceDemo(bufferDepth: Int,
     val pixelValid  = Output(Bool())
     val pixelAddress  = Output(UInt(log2Ceil(bufferDepth).W))
     val prescaler   = Input(UInt(log2Ceil(max_prescaler).W))
+
+    val pixelIndex= Output(UInt(1.W))
+
   })
 
   val clock_div = Module(new clockDivider(max_prescaler))
   val capture_interface = Module(new CaptureInterface(bufferDepth))
 
-  clock_div.io.clock_in  := clock
+  clock_div.io.clock_in  := (!clock.asBool).asClock()
   clock_div.io.reset     := reset
   clock_div.io.prescaler := io.prescaler
 
@@ -151,4 +160,7 @@ class CaptureInterfaceDemo(bufferDepth: Int,
   capture_interface.io.capturing   <> io.capturing
   capture_interface.io.pixelValid  <> io.pixelValid
   capture_interface.io.pixelAddress <> io.pixelAddress
+
+  io.pixelIndex := capture_interface.io.pixelIndex // peek out for testing
+
 }

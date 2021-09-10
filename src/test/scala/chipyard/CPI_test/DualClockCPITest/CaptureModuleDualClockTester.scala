@@ -86,26 +86,26 @@ class CaptureModuleDualClockTester(dut: CaptureModuleDualClockDemo)
     "and gray scale images with the resolution of " + width.toString +"x" +
     height.toString+ Console.RESET )
 }
-//class WaveformCaptureModuleDualClock extends FlatSpec with Matchers {
-//  "WaveformCounter" should "pass" in {
-//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-//      new CaptureModuleDualClockDemo(120,120,64)){ c =>
-//      new CaptureModuleDualClockTester(c)(120,120)
-//    } should be (true)
-//  }
-//}
+class WaveformCaptureModuleDualClock extends FlatSpec with Matchers {
+  "WaveformCounter" should "pass" in {
+    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+      new CaptureModuleDualClockDemo(40,40,64)){ c =>
+      new CaptureModuleDualClockTester(c)(40,40)
+    } should be (true)
+  }
+}
 
 object CaptureModuleDualClockTester extends App{
   chisel3.iotesters.Driver(() => new CaptureModuleDualClockDemo(
-    120,120,4)){ c=>
+    120,120,64)){ c=>
     new CaptureModuleDualClockTester(c)(120,120)
   }
 }
 class CaptureModuleDualClockSpec extends FlatSpec with Matchers {
   "CaptureModule" should "pass" in {
     chisel3.iotesters.Driver (() => new CaptureModuleDualClockDemo(
-      120,120,4)) { c =>
-      new CaptureModuleDualClockTester(c)(120,120)
+      40,40,64)) { c =>
+      new CaptureModuleDualClockTester(c)(40,40)
     } should be (true)
   }
 }
