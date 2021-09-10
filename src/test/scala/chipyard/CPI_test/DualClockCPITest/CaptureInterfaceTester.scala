@@ -13,11 +13,11 @@ class CaptureInterfaceTester(dut: CaptureInterfaceDemo)
 
   val prescaler = 8
   poke(dut.io.prescaler,prescaler)
-  step(197)
+  step(5*prescaler)
 
   //====================synthesized timing========================//
   val tp = prescaler
-  val t_line = 784
+  val t_line = 10*prescaler
   poke(dut.io.capture, true.B)
   step(prescaler)
   for (imageFormat <- 0 until (2)) {
@@ -25,7 +25,7 @@ class CaptureInterfaceTester(dut: CaptureInterfaceDemo)
     val refFrame = new referenceFrame().generateRandomFrame(width*height, imageFormat)
     poke(dut.io.vsync, false.B)
     poke(dut.io.href, false.B)
-    step(10)
+    step(prescaler)
 
     poke(dut.io.vsync, true.B)
     poke(dut.io.href, false.B)
@@ -74,9 +74,9 @@ class CaptureInterfaceTester(dut: CaptureInterfaceDemo)
         idx = idx + 1
       }
       poke(dut.io.href, false.B)
-      step(20 * tp)
+      step(5*prescaler)
     }
-    step(20)
+    step(prescaler*2)
   }
 }
 
