@@ -72,18 +72,28 @@ class CaptureInterface(bufferDepth: Int) extends Module{
             pixelValid         := true.B
           }otherwise {              // RGB 16 bit modes
             pixelIndex := (!pixelIndex)
-            switch(pixelIndex) {
-              is(0.U) {
-                firstByte  := io.pixelIn
-                pixelValid := false.B
-              }
-              is(1.U) {
-                secondByte         := io.pixelIn
-                colCnt             := colCnt + 1.U
-                bufferDepthCounter := bufferDepthCounter + 1.U
-                pixelValid         := true.B
-              }
+            when(pixelIndex===0.U){
+              firstByte  := io.pixelIn
+              pixelValid := false.B
+            }otherwise{
+              secondByte         := io.pixelIn
+              colCnt             := colCnt + 1.U
+              bufferDepthCounter := bufferDepthCounter + 1.U
+              pixelValid         := true.B
             }
+
+//            switch(pixelIndex) {
+//              is(0.U) {
+//                firstByte  := io.pixelIn
+//                pixelValid := false.B
+//              }
+//              is(1.U) {
+//                secondByte         := io.pixelIn
+//                colCnt             := colCnt + 1.U
+//                bufferDepthCounter := bufferDepthCounter + 1.U
+//                pixelValid         := true.B
+//              }
+//            }
           }
         }.otherwise{
           pixelValid := false.B
@@ -133,7 +143,7 @@ class CaptureInterfaceDemo(bufferDepth: Int,
     val capture     = Input(Bool())
     val capturing   = Output(Bool())
     val pixelValid  = Output(Bool())
-    val pixelAddress  = Output(UInt(log2Ceil(bufferDepth).W))
+    val pixelAddress = Output(UInt(log2Ceil(bufferDepth).W))
     val prescaler   = Input(UInt(log2Ceil(max_prescaler).W))
 
     val pixelIndex= Output(UInt(1.W))
