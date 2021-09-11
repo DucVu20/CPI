@@ -6,10 +6,10 @@
 #define CAM_CAPTURE 0x10003004
 #define CAM_MODE 0x10003008
 #define CAM_CONFIG 0x1000300C
-#define SET_IMAGE_RESOLUTION 0x10003010
-#define RETURNED_IMAGE_RESOLUTION 0x10003014
-#define PIXEL 0x10003018
-#define SIOC 0x1000301C
+#define RETURNED_IMAGE_RESOLUTION 0x10003010
+#define PIXEL 0x10003014
+#define PRESCALER 0x10003018
+#define SIOC_SIOD 0x1000301C
 
 
 void configure_camera(unsigned int addr, unsigned int config_data){
@@ -18,7 +18,6 @@ void configure_camera(unsigned int addr, unsigned int config_data){
     reg_write8(CAM_CONFIG,1)    ;    // write one to force the camera to
                                      // work at the predefined mode
     printf("Configuration mode transmitted\n");
-
 }
 void capture_image() {
     reg_write32(CAM_CAPTURE,1);
@@ -41,19 +40,29 @@ void check_status(){
 
 int main(void){
 
-    // check the status of the camera
-    int addr1=0x40, mode1=0xD0;
-    int addr=0x12, mode=0x80;
+    reg_write8(PRESCALER,4);
+
     check_status();
 
     while((reg_read8(CAM_STATUS)&0x04)==0);
-    configure_camera( addr, mode) ;   // reset the camera to default mode
-
+    configure_camera( 0x12, 0x80) ;   // reset the camera to default mode
+//    char idx=7
+//    char addr[8]
+//    while((reg_read8(CAM_STATUS)&0x04)==0){
+//        char c_low=reg_read8(SIOC_SIOD)&0x02;
+//        char c_high=reg_read8(SIOC_SIOD)&0x02;
+//
+//        if(c_high-c_low){
+//            if(phase==0&&(idx!=(-1))){
+//
+//            }
+//        }
+//    }
     printf("Reset the camera \n");
     while((reg_read8(CAM_STATUS)&0x04)==0);        // wait until sccb interface is ready
 
-    configure_camera(addr1, mode1);   // RGB565
-    printf("Configure the RGB565 mode \n");
+    configure_camera(0x40, 0xD0);   // RGB565
+    printf("Configured the RGB565 mode \n");
     capture_image();
     printf("generated a capture signal an image \n");
 

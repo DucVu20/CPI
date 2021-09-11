@@ -4,27 +4,27 @@ import chisel3._
 import chisel3.util._
 
 
-class CaptureModuleSingleClock(width: Int,
-                               height: Int)  extends Module {
-  val w = width
-  val h = height
-  val bufferDepth = width * height // the maximum depth of the buffer
-  val pixelBits = 16
+class CaptureModule(imgWidth: Int, imgHeight: Int,
+                    bytePerPixel: Int,
+                    bufferDepth: Int )  extends Module {
+  val w = imgWidth
+  val h = imgHeight
+  val pixelBits = 8*bytePerPixel
 
   val io  = IO(new Bundle {
     val pclk         = Input (Bool())
-    val href          = Input (Bool())
-    val vsync         = Input (Bool())
-    val pixelIn       = Input (UInt(8.W))
-    val pixelOut      = Output(UInt(pixelBits.W))
-    val pixelAddr     = Output(UInt(log2Ceil(bufferDepth).W))
-    val frameWidth    = Output(UInt(log2Ceil(640).W))
-    val frameHeight   = Output(UInt(log2Ceil(480).W))
-    val imageFormat   = Input(UInt(1.W))
-    val capture       = Input (Bool())
-    val capturing     = Output(Bool())
-    val read_frame    = Input (Bool()) // ready
-    val frame_full    = Output(Bool()) // valid
+    val href         = Input (Bool())
+    val vsync        = Input (Bool())
+    val pixelIn      = Input (UInt(8.W))
+    val pixelOut     = Output(UInt(pixelBits.W))
+    val pixelAddr    = Output(UInt(log2Ceil(bufferDepth).W))
+    val frameWidth   = Output(UInt(log2Ceil(imgWidth).W))
+    val frameHeight  = Output(UInt(log2Ceil(imgHeight).W))
+    val imageFormat  = Input(UInt(1.W))                // either RGB or gray
+    val capture      = Input (Bool())
+    val capturing    = Output(Bool())
+    val readFrame    = Input (Bool()) // ready
+    val frameFull    = Output(Bool()) // valid
 
   })
   val idle :: capture_frame :: Nil = Enum(2)
@@ -35,25 +35,26 @@ class CaptureModuleSingleClock(width: Int,
   val firstByte           = RegInit(0.U(8.W))
   val secondByte          = RegInit(0.U(8.W))
   val pixel               = Cat(firstByte,secondByte)
-  val captureSignalHolder = RegInit(false.B)
+  val captureSignalHolder = RegInit(false.B)  // used to hold the capture
+  // signal to capture an image when signals for a new frame is available
   val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
   val frameDone           = RegInit(false.B)
-  val pixelIndex          = RegInit(0.U((1.W)))
-  val rowCnt              = RegInit(0.U(log2Ceil(480).W))
-  val colCnt              = RegInit(0.U(log2Ceil(640).W))
+  val pixelIndex          = RegInit(0.U(log2Ceil(bytePerPixel).W))
+  val rowCnt              = RegInit(0.U(log2Ceil(imgWidth).W))
+  val colCnt              = RegInit(0.U(log2Ceil(imgHeight).W))
 
-  val wrEnaWire  = WireInit(false.B)
   val bufferAddr = WireInit(0.U(log2Ceil(bufferDepth).W))
   val capturing  = WireInit(false.B)
+  val wrEnaWire  = WireInit(false.B)
   val wrEna      = RegNext(wrEnaWire)
 
  val buffer = Module(new single_port_ram(bufferDepth,UInt(pixelBits.W)))
 
-  val pclkRisingEdge    = (io.pclk) & (!RegNext(io.pclk))
-  val vsyncFallingEdge  = (!io.vsync) & (RegNext(io.vsync))
+  val pclkRisingEdge   = (io.pclk) & (!RegNext(io.pclk))
+  val vsyncFallingEdge = (!io.vsync) & (RegNext(io.vsync))
 
   //=====================READ ADDRESS GENERATOR==================//
-  when(io.read_frame) {
+  when(io.readFrame) {
     bufferAddr := readPtr
     readPtr    := readPtr + 1.U
     when(readPtr === (bufferDepthCounter - 1.U)) {
@@ -66,6 +67,7 @@ class CaptureModuleSingleClock(width: Int,
   }
 
   captureSignalHolder  := Mux(io.capture, io.capture, captureSignalHolder)
+
   //====================FMS for capturing images============================//
   switch(FMS) {
     is(idle) {
@@ -73,7 +75,8 @@ class CaptureModuleSingleClock(width: Int,
         FMS := idle
       }.otherwise {
         when(captureSignalHolder) {
-          when(vsyncFallingEdge) {
+          when(vsyncFallingEdge) {  // only capture when there's capture signal
+                                    // and vsync goes low
             FMS                 := capture_frame
             captureSignalHolder := false.B
             frameDone           := false.B
@@ -84,17 +87,17 @@ class CaptureModuleSingleClock(width: Int,
       capturing := false.B
     }
     is(capture_frame) {
-      capturing  := true.B
-      frameDone  := Mux(io.vsync, true.B, false.B)
-      FMS        := Mux(io.vsync, idle, capture_frame)
+      capturing := true.B
+      frameDone := Mux(io.vsync, true.B, false.B)
+      FMS       := Mux(io.vsync, idle, capture_frame)
 
       when(pclkRisingEdge && (io.href)) {
         when(io.imageFormat===0.U){     //gray scale, 8 bit for 1 pixel
           firstByte  := 0.U
-          secondByte  := io.pixelIn
-          wrEnaWire   := pclkRisingEdge
-          writePtr    := writePtr+1.U
-          colCnt      := colCnt + 1.U
+          secondByte := io.pixelIn
+          wrEnaWire  := pclkRisingEdge
+          writePtr   := writePtr+1.U
+          colCnt     := colCnt + 1.U
           bufferDepthCounter := bufferDepthCounter + 1.U
 
         }otherwise {                   // RGB 16 bit modes
@@ -117,7 +120,7 @@ class CaptureModuleSingleClock(width: Int,
   }
   //=======================connect signals to the buffer=====================//
   buffer.io.wrEna   := wrEna
-  buffer.io.rdEna   := io.read_frame
+  buffer.io.rdEna   := io.readFrame
   buffer.io.addr    := bufferAddr
   buffer.io.data_in := pixel
 
@@ -127,7 +130,7 @@ class CaptureModuleSingleClock(width: Int,
   io.frameHeight  := rowCnt
   io.pixelAddr    := RegNext(readPtr)
   io.pixelOut     := buffer.io.data_out
-  io.frame_full   := frameDone
+  io.frameFull    := frameDone
 
   //==============SPECIFY RESOLUTION BASED ON HREF, VSYNC ==================//
   when((io.href) & (!RegNext(io.href))) {

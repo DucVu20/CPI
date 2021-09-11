@@ -1,11 +1,11 @@
-package chipyard.CPI_test.SingleClockCPITest
+package CPITest
 
-import CPI.SingleClockCPI.CaptureModuleSingleClock
+import CPI.SingleClockCPI.CaptureModule
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
 
-class CaptureModuleSingleClockTester(dut:CaptureModuleSingleClock)(n:Int, imageFormat: Int) extends PeekPokeTester(dut) {
+class CaptureModuleTester(dut:CaptureModule)(n:Int, imageFormat: Int) extends PeekPokeTester(dut) {
 
   val height = dut.h
   val width = dut.w
@@ -65,9 +65,9 @@ class CaptureModuleSingleClockTester(dut:CaptureModuleSingleClock)(n:Int, imageF
     step(1 * 784 * tp)
     //=========================validation============================//
 
-    while (peek(dut.io.frame_full) == 1) {
+    while (peek(dut.io.frameFull) == 1) {
       step(scala.util.Random.nextInt(10))
-      poke(dut.io.read_frame, true.B)
+      poke(dut.io.readFrame, true.B)
       step(1)
 
       var idx_out = peek(dut.io.pixelAddr).toInt // pixel_address
@@ -79,12 +79,13 @@ class CaptureModuleSingleClockTester(dut:CaptureModuleSingleClock)(n:Int, imageF
       else {
         expect(dut.io.pixelOut, refPixelVal)
       }
-      poke(dut.io.read_frame, false.B)
+      poke(dut.io.readFrame, false.B)
       //step(1)
     }
     step(200)
   }
 }
+
 class referenceFrame(){
 
   def generateRandomFrame(ImageResolution:Int, ImageFormat: Int): Array[Int]={
@@ -121,34 +122,37 @@ class referenceFrame(){
   }
 }
 
-class wave_of_capture_module extends FlatSpec with Matchers {
-  "WaveformCounter" should "pass" in {
+class WaveOfCaptureModule extends FlatSpec with Matchers {
+  "Waveform when capture gray images" should "pass" in {
     Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new CaptureModuleSingleClock(20,10)){ c =>
-      new CaptureModuleSingleClockTester(c)(4,0)
+      new CaptureModule(20,10,
+        2,400)){ c =>
+      new CaptureModuleTester(c)(4,0)
+    } should be (true)
+  }
+
+  "Waveform when capture RGB images" should "pass" in {
+    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+      new CaptureModule(20,10,
+        2, 400)){ c =>
+      new CaptureModuleTester(c)(4,0)
     } should be (true)
   }
 }
 
-object CaptureModuleSingleClockTester extends App{
-  chisel3.iotesters.Driver(() => new CaptureModuleSingleClock(
-    20,10)){ c=>
-    new CaptureModuleSingleClockTester(c)(4,0)
-  }
-}
-class CaptureModuleSingleClockGraySpec extends FlatSpec with Matchers {
+class CaptureModuleSingleClockSpec extends FlatSpec with Matchers {
   "Capture Module Single Clock Gray Scale" should "pass" in {
-    chisel3.iotesters.Driver (() => new CaptureModuleSingleClock(
-      100,100)) { c =>
-      new CaptureModuleSingleClockTester(c)(4,0)
-    } should be (true)
+    chisel3.iotesters.Driver(() => new CaptureModule(
+      10, 10,
+      2,400)) { c =>
+      new CaptureModuleTester(c)(4, 0)
+    } should be(true)
   }
-}
-class CaptureModuleSingleClockRGBSpec extends FlatSpec with Matchers {
   "Capture Module Single Clock RGB image" should "pass" in {
-    chisel3.iotesters.Driver (() => new CaptureModuleSingleClock(
-      100,100)) { c =>
-      new CaptureModuleSingleClockTester(c)(4,1)
+    chisel3.iotesters.Driver (() => new CaptureModule(
+      10,10,
+      2, 400)) { c =>
+      new CaptureModuleTester(c)(4,1)
     } should be (true)
   }
 }

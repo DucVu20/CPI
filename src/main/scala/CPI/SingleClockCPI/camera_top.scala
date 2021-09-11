@@ -1,6 +1,6 @@
 package CPI.SingleClockCPI
 
-import CPI.{Rx_ver1, SCCB_interface, Tx}
+import CPI.{Rx_ver1, SCCBInterface, Tx}
 import chisel3._
 import chisel3.util._
 
@@ -13,8 +13,9 @@ class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
                  baudRate: Int) extends  Module {
   val MHz=scala.math.pow(10,6)
   // add modules
-  val frame_capture = Module(new CaptureModuleSingleClock(img_width, img_height))
-  val sccb_interface = Module(new SCCB_interface(CLK_FREQ_MHz, SCCB_FREQ_kHz))
+  val frame_capture = Module(new CaptureModule(img_width, img_height,
+    2, img_width*img_height))
+  val sccb_interface = Module(new SCCBInterface(CLK_FREQ_MHz, SCCB_FREQ_kHz))
   val receiver = Module(new Rx_ver1((CLK_FREQ_MHz*MHz).toInt, baudRate))
   val transmitter = Module(new Tx((CLK_FREQ_MHz*MHz).toInt, baudRate))
 
@@ -130,12 +131,12 @@ class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
         is(4.U){  //check buffer status
           when(tx_ready){
             tx_valid:=true.B
-            tx_data:=frame_capture.io.frame_full
+            tx_data:=frame_capture.io.frameFull
             FMS:=idle
           }
         }
         is(5.U){  // read image
-          when(frame_capture.io.frame_full){
+          when(frame_capture.io.frameFull){
             read_image:=true.B
             FMS:=idle
           }
@@ -176,7 +177,7 @@ class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
       when(transmitter.io.channel.ready){
         tx_fms:=Mux(byte_counter.asBool,transmit_to_cpu,load_pixel)
       }
-      when(!frame_capture.io.frame_full){ // when empty, done reading
+      when(!frame_capture.io.frameFull){ // when empty, done reading
         tx_fms:=idle
       }
     }
@@ -189,7 +190,7 @@ class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
   io.SIOC:=sccb_interface.io.SIOC
   io.SIOD:=sccb_interface.io.SIOD
   // capture module
-  frame_capture.io.read_frame<>read_pixel
+  frame_capture.io.frameFull<>read_pixel
   frame_capture.io.pclk<>io.p_clk
   frame_capture.io.href<>io.href
   frame_capture.io.vsync<>io.vsync

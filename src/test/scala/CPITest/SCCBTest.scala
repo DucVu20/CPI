@@ -1,11 +1,11 @@
-package chipyard.CPI_test
+package CPITest
 
-import CPI.SCCB_interface
+import CPI.SCCBInterface
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
 
-class SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCB_interface){
+class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCBInterface){
 
   poke(dut.io.config,false)
   step(1000)
@@ -98,16 +98,16 @@ class SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends Pee
 //    } should be (true)
 //  }
 //}
-object SCCB_interface_test extends App{
-  chisel3.iotesters.Driver(() => new SCCB_interface(50, 100.2)){ c=>
-    new SCCB_interface_test(c)(30)
+object SCCBInterfaceTest extends App{
+  chisel3.iotesters.Driver(() => new SCCBInterface(50, 100.2)){ c=>
+    new SCCBInterfaceTest(c)(30)
   }
 }
 class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
-    chisel3.iotesters.Driver (() => new SCCB_interface(
+    chisel3.iotesters.Driver (() => new SCCBInterface(
       50,100.2)) { c =>
-      new SCCB_interface_test(c)(600)
+      new SCCBInterfaceTest(c)(600)
     } should be (true)
   }
 }

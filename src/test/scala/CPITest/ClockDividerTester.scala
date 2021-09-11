@@ -1,4 +1,4 @@
-package chipyard.CPI_test
+package CPITest
 
 import CPI.clock_divider_demo
 import chisel3._
