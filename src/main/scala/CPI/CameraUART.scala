@@ -7,9 +7,9 @@ object Types{
   val configure_camera::capture_image::image_status::read_image::Nil=Enum(4)
 }
 
-class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
-                 img_width: Int, img_height: Int,
-                 baudRate: Int) extends  Module {
+class CameraUartTop(CLK_FREQ_MHz: Double, SCCB_FREQ_kHz: Double,
+                    img_width: Int, img_height: Int,
+                    baudRate: Int) extends  Module {
   val MHz=scala.math.pow(10,6)
   // add modules
   val frame_capture = Module(new CaptureModule(img_width, img_height,
@@ -203,6 +203,6 @@ class camera_uart_top(CLK_FREQ_MHz: Double ,SCCB_FREQ_kHz: Double,
 // I suspose you should feed low frequency clock to the OV7670 first, 10MHz first, let's say.
 // CLK_FREQ and SCCB_FREQ are double type, so you can use
 object camera_top_v extends App {
-  chisel3.Driver.execute(Array[String](), () => new camera_uart_top(45.8,50,
+  chisel3.Driver.execute(Array[String](), () => new CameraUartTop(45.8,50,
     640,480,115200))
 }
