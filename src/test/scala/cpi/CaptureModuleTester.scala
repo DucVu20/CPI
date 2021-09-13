@@ -5,7 +5,7 @@ import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
 
-class CaptureModuleTester(dut:CaptureModule)(n:Int, imageFormat: Int) extends PeekPokeTester(dut) {
+class CaptureModuleTester(dut:CaptureModule)(n:Int) extends PeekPokeTester(dut) {
 
   val height = dut.h
   val width = dut.w
@@ -60,7 +60,7 @@ class CaptureModuleTester(dut:CaptureModule)(n:Int, imageFormat: Int) extends Pe
       poke(dut.io.href, false.B)
       step(144 * tp)
     }
-    step(10 * 784 * tp)
+    step(1 * 784 * tp)
     poke(dut.io.vsync, true.B)
     step(1 * 784 * tp)
     //=========================validation============================//
@@ -73,6 +73,7 @@ class CaptureModuleTester(dut:CaptureModule)(n:Int, imageFormat: Int) extends Pe
       var idx_out = peek(dut.io.pixelAddr).toInt // pixel_address
       var refPixelVal = new referenceFrame().validate(idx_out, refFrame)
 
+      //println("ref: "+refPixelVal.toHexString+" got "+peek(dut.io.pixelOut).toInt.toHexString)
       if (imageFormat == 1) {
         expect(dut.io.pixelOut, refPixelVal)
       }
@@ -127,32 +128,18 @@ class WaveOfCaptureModule extends FlatSpec with Matchers {
     Driver.execute(Array("--generate-vcd-output", "on"), () =>
       new CaptureModule(20,10,
         2,400)){ c =>
-      new CaptureModuleTester(c)(4,0)
+      new CaptureModuleTester(c)(4)
     } should be (true)
   }
 
-  "Waveform when capture RGB images" should "pass" in {
-    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new CaptureModule(20,10,
-        2, 400)){ c =>
-      new CaptureModuleTester(c)(4,0)
-    } should be (true)
-  }
 }
 
 class CaptureModuleSingleClockSpec extends FlatSpec with Matchers {
-  "Capture Module Single Clock Gray " should "pass" in {
+  "Capture Module Single Clock Gray and RGB " should "pass" in {
     chisel3.iotesters.Driver(() => new CaptureModule(
-      100, 100,
+      100,80,
       2,100*100)) { c =>
-      new CaptureModuleTester(c)(4, 0)
+      new CaptureModuleTester(c)(4)
     } should be(true)
-  }
-  "Capture Module Single Clock RGB " should "pass" in {
-    chisel3.iotesters.Driver (() => new CaptureModule(
-      100,100,
-      2, 100*100)) { c =>
-      new CaptureModuleTester(c)(4,1)
-    } should be (true)
   }
 }
