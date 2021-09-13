@@ -1,4 +1,4 @@
-package cpi
+package sislab.cpi
 
 import chisel3._
 import chisel3.util._
@@ -10,7 +10,6 @@ import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.regmapper.{HasRegMap, RegField}
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.UIntIsOneOf
-import chipyard.iobinders.{OverrideIOBinder}
 
 case class CPIParams(
                       address: BigInt        = 0x10003000,

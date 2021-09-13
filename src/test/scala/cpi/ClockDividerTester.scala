@@ -1,6 +1,5 @@
-package cpi
+package sislab.cpi
 
-import cpi.ClockDividerDemo
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._

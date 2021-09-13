@@ -1,6 +1,6 @@
-package cpi
+package sislab.cpi
 
-import cpi.CaptureModule
+import sislab.cpi.CaptureModule
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._

@@ -1,10 +1,10 @@
-package cpi
+package sislab.cpi
 
 import chisel3._
 import chisel3.util._
 
 class ClockDivider(maxPrescaler: Int) extends Module{
-  val io=IO(new Bundle{
+  val io = IO(new Bundle {
     val clock_in      = Input(Clock())
     val divided_clock = Output(Clock())
     val reset         = Input(Bool())
@@ -31,7 +31,7 @@ class ClockDivider(maxPrescaler: Int) extends Module{
 }
 
 class ClockDividerDemo(maxPrescaler:Int) extends Module{
-  val io=IO(new Bundle{
+  val io = IO(new Bundle {
     val reset         = Input(Bool())
     val divided_clock = Output(Clock())
     val prescaler     = Input(UInt(log2Ceil(maxPrescaler).W))
