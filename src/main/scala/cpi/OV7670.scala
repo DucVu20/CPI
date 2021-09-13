@@ -19,11 +19,10 @@ case class CPIParams(
                       imgHeight: Int         = 480,
                       bytePerPixel: Int      = 2,
                       bufferDepth: Int       = 640*480,
-                      sccbFreqkHz: Double    = 100,
-                      systemFreqMHz: Double  = 50,
+                      sccbFreqkHz: Int    = 100,
+                      systemFreqMHz: Int  = 50,
                       maxPrescaler: Int      = 32
                     )
-
 object CPIMOMI{
   val camStatus                = 0x00
   val camCapture               = 0x04
@@ -35,14 +34,12 @@ object CPIMOMI{
   val prescaler                = 0x20
 }
 
-class CPIIO(val imgWidth: Int, val imgHeight: Int,
-            val bytePerPixel: Int, val bufferDepth: Int,
-            val maxPrescaler: Int) extends Bundle{
+class CPIIO(p: CPIParams) extends Bundle{
 
   val clock     = Input(Clock())
   val reset     = Input(Bool())
   val XCLK      = Output(Clock())
-  val prescaler = Input(UInt(log2Ceil(maxPrescaler).W))
+  val prescaler = Input(UInt(log2Ceil(p.maxPrescaler).W))
 
   val pclk         = Input(Bool())
   val href         = Input(Bool())
@@ -53,10 +50,10 @@ class CPIIO(val imgWidth: Int, val imgHeight: Int,
   val capture      = Input(Bool())
   val readFrame    = Input(Bool()) // ready
 
-  val pixelOut     = Output(UInt((8*bytePerPixel).W))
-  val pixelAddr    = Output(UInt(log2Ceil(bufferDepth).W))
-  val frameWidth   = Output(UInt(log2Ceil(imgWidth).W))
-  val frameHeight  = Output(UInt(log2Ceil(imgHeight).W))
+  val pixelOut     = Output(UInt((8*p.bytePerPixel).W))
+  val pixelAddr    = Output(UInt(log2Ceil(p.bufferDepth).W))
+  val frameWidth   = Output(UInt(log2Ceil(p.imgWidth).W))
+  val frameHeight  = Output(UInt(log2Ceil(p.imgHeight).W))
   val capturing    = Output(Bool())
   val frameFull    = Output(Bool()) // valid
 
@@ -83,28 +80,16 @@ class CPIInterrupts extends Bundle{
 }
 
 trait HasCPIIO extends BaseModule{
-  val imgWidth     : Int
-  val imgHeight    : Int
-  val bytePerPixel : Int
-  val bufferDepth  : Int
-  val maxPrescaler : Int
-  val io = IO(new CPIIO(imgWidth,imgHeight,
-    bytePerPixel, bufferDepth, maxPrescaler))
+  val io = IO(new CPIIO(CPIParams.apply()))
 }
 
 
-class CPI(val imgWidth:  Int,
-          val imgHeight: Int,
-          val bytePerPixel: Int,
-          val bufferDepth  : Int,
-          val systemFreqMHz: Double,
-          val sccbFreqkHz: Double,
-          val maxPrescaler: Int ) extends Module with HasCPIIO {
+class CPI(p: CPIParams) extends Module with HasCPIIO {
 
-  val captureModule = Module(new CaptureModule(imgWidth, imgHeight,
-    bytePerPixel, bufferDepth))
-  val SCCBInterface = Module(new SCCBInterface(systemFreqMHz, sccbFreqkHz))
-  val XCLKGenerator = Module(new ClockDivider(maxPrescaler))
+  val captureModule = Module(new CaptureModule(p.imgWidth, p.imgHeight,
+    p.bytePerPixel, p.bufferDepth))
+  val SCCBInterface = Module(new SCCBInterface(p.systemFreqMHz, p.sccbFreqkHz))
+  val XCLKGenerator = Module(new ClockDivider(p.maxPrescaler))
 
   captureModule.io.pclk        := io.pclk
   captureModule.io.href        := io.href
@@ -141,9 +126,7 @@ trait CPIModule extends HasRegMap{
   val reset: Reset
 
   val pixel = Wire(new DecoupledIO(UInt((params.bytePerPixel*8).W)))
-  val CPI   = Module(new CPI(params.imgWidth, params.imgHeight,
-    params.bytePerPixel, params.bufferDepth, params.systemFreqMHz,
-    params.sccbFreqkHz, params.maxPrescaler))
+  val CPI   = Module(new CPI(params))
 
   val status             = Wire(UInt(3.W))
   val captureFrame       = WireInit(false.B)

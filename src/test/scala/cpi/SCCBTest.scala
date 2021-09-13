@@ -67,7 +67,7 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
       }
     }
   }
-  Console.out.println(Console.YELLOW+"blue texts indicate the testing results")
+  Console.out.println(Console.YELLOW+"testing results of the SCCB interface are highlighted in blue")
   Console.out.println(Console.BLUE+"test result: " +number_of_tests_passed.toString+
     " tests passed over "+number_of_test.toString+" being tested"+Console.RESET)
 

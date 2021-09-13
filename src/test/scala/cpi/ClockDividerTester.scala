@@ -17,7 +17,7 @@ class ClockDividerTest(dut:ClockDividerDemo) extends PeekPokeTester(dut){
     step(1)
 }
 
-class clock_divider_CPI_waveform extends FlatSpec with Matchers {
+class ClockDividerWave extends FlatSpec with Matchers {
   "WaveformCounter" should "pass" in {
     Driver.execute(Array("--generate-vcd-output", "on"), () =>
       new ClockDividerDemo(512)) { c =>

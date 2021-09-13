@@ -87,7 +87,7 @@ class CaptureModuleTester(dut:CaptureModule)(n:Int) extends PeekPokeTester(dut) 
   }
 }
 
-class referenceFrame(){
+class referenceFrame{
 
   def generateRandomFrame(ImageResolution:Int, ImageFormat: Int): Array[Int]={
     if(ImageFormat==0){
@@ -123,21 +123,22 @@ class referenceFrame(){
   }
 }
 
-class WaveOfCaptureModule extends FlatSpec with Matchers {
-  "Waveform when capture gray images" should "pass" in {
-    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new CaptureModule(20,10,
-        2,400)){ c =>
-      new CaptureModuleTester(c)(4)
-    } should be (true)
-  }
+//class WaveOfCaptureModule extends FlatSpec with Matchers {
+//  "Waveform when capture gray images" should "pass" in {
+//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+//      new CaptureModule(20,10,
+//        2,400)){ c =>
+//      new CaptureModuleTester(c)(4)
+//    } should be (true)
+//  }
+//
+//}
 
-}
 
-class CaptureModuleSingleClockSpec extends FlatSpec with Matchers {
+class CaptureModuleSpec extends FlatSpec with Matchers {
   "Capture Module Single Clock Gray and RGB " should "pass" in {
     chisel3.iotesters.Driver(() => new CaptureModule(
-      100,80,
+      100,90,
       2,100*100)) { c =>
       new CaptureModuleTester(c)(4)
     } should be(true)
