@@ -87,13 +87,13 @@ class SCCB_interface_test(dut:SCCB_interface)(n_of_random_test: Int) extends Pee
 class SCCB_interface_waveform extends FlatSpec with Matchers {
   "WaveformCounter" should "pass" in {
     Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new SCCB_interface(50, 100.2.toFloat )) { c =>
+      new SCCB_interface(50000000, 400000 )) { c =>
       new SCCB_interface_test(c)(20)
     } should be (true)
   }
 }
 object SCCB_interface_test extends App{
-  chisel3.iotesters.Driver(() => new SCCB_interface(50, 100.2.toFloat)){ c=>
+  chisel3.iotesters.Driver(() => new SCCB_interface(50000000, 400000)){ c=>
     new SCCB_interface_test(c)(728)
   }
 }
