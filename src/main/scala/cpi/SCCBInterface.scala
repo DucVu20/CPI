@@ -1,9 +1,9 @@
-package CPI
+package cpi
 
 import chisel3._
 import chisel3.util._
 
-class SCCBInterface(CLK_FREQ_MHz: Double, SCCB_FREQ_KHz: Double) extends Module{
+class SCCBInterface(CLK_FREQ_MHz: Int, SCCB_FREQ_KHz: Int) extends Module{
   val MHz=scala.math.pow(10,6)
   val kHz=scala.math.pow(10,3)
   val timer=(CLK_FREQ_MHz*MHz/(SCCB_FREQ_KHz*kHz*2)).toInt

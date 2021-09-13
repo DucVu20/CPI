@@ -1,6 +1,6 @@
-package CPITest
+package cpi
 
-import CPI.SCCBInterface
+import cpi.SCCBInterface
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
@@ -8,7 +8,7 @@ import org.scalatest._
 class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCBInterface){
 
   poke(dut.io.config,false)
-  step(1000)
+  step(40)
 
   val number_of_test=(n_of_random_test)
   var number_of_tests_passed=0
@@ -59,7 +59,7 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
       }
     }
 
-    step(2000)
+    step(50)
     // check for the number of tests passed
     if(slave_addr==bin2dec(transmitted_slave_addr)){
       if((control_addr==bin2dec(transmitted_addr))&&(config_data==bin2dec(transmitted_data))){
@@ -67,7 +67,7 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
       }
     }
   }
-  Console.out.println(Console.BLUE+"blue texts indicate the testing results")
+  Console.out.println(Console.YELLOW+"blue texts indicate the testing results")
   Console.out.println(Console.BLUE+"test result: " +number_of_tests_passed.toString+
     " tests passed over "+number_of_test.toString+" being tested"+Console.RESET)
 
@@ -99,15 +99,15 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
 //  }
 //}
 object SCCBInterfaceTest extends App{
-  chisel3.iotesters.Driver(() => new SCCBInterface(50, 100.2)){ c=>
-    new SCCBInterfaceTest(c)(30)
+  chisel3.iotesters.Driver(() => new SCCBInterface(50, 100)){ c=>
+    new SCCBInterfaceTest(c)(50)
   }
 }
 class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
     chisel3.iotesters.Driver (() => new SCCBInterface(
-      50,100.2)) { c =>
-      new SCCBInterfaceTest(c)(600)
+      50,100)) { c =>
+      new SCCBInterfaceTest(c)(200)
     } should be (true)
   }
 }

@@ -1,4 +1,4 @@
-package CPI
+package cpi
 
 import chisel3._
 import chisel3.util._
@@ -48,7 +48,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   val wrEnaWire  = WireInit(false.B)
   val wrEna      = RegNext(wrEnaWire)
 
- val buffer = Module(new single_port_ram(bufferDepth,UInt(pixelBits.W)))
+  val buffer = Module(new single_port_ram(bufferDepth,UInt(pixelBits.W)))
 
   val pclkRisingEdge   = (io.pclk) & (!RegNext(io.pclk))
   val vsyncFallingEdge = (!io.vsync) & (RegNext(io.vsync))
@@ -73,10 +73,9 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
     is(idle) {
       when(io.vsync) {
         FMS := idle
-      }.otherwise {
+      } otherwise {
         when(captureSignalHolder) {
-          when(vsyncFallingEdge) {  // only capture when there's capture signal
-                                    // and vsync goes low
+          when(vsyncFallingEdge) {
             FMS                 := capture_frame
             captureSignalHolder := false.B
             frameDone           := false.B
@@ -118,13 +117,13 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
       }
     }
   }
-  //=======================connect signals to the buffer=====================//
+  //=======================connect signals to the buffer========================//
   buffer.io.wrEna   := wrEna
   buffer.io.rdEna   := io.readFrame
   buffer.io.addr    := bufferAddr
   buffer.io.data_in := pixel
 
-  //==============================IO=========================================//
+  //==============================IO============================================//
   io.capturing    := capturing
   io.frameWidth   := colCnt
   io.frameHeight  := rowCnt
@@ -132,7 +131,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   io.pixelOut     := buffer.io.data_out
   io.frameFull    := frameDone
 
-  //==============SPECIFY RESOLUTION BASED ON HREF, VSYNC ==================//
+  //================GET IMAGE RESOLUTION BASED ON HREF, VSYNC ==================//
   when((io.href) & (!RegNext(io.href))) {
     rowCnt := rowCnt + 1.U
     colCnt := 0.U

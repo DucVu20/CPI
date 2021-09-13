@@ -14,13 +14,13 @@
 
 void configure_camera(unsigned int addr, unsigned int config_data){
     unsigned int mode=(addr<<8)||(config_data);
-    reg_write16(CAM_MODE,mode)   ;   // write configuration to the camera
-    reg_write8(CAM_CONFIG,1)    ;    // write one to force the camera to
+    reg_write16(CAM_MODE, mode)   ;   // write configuration to the camera
+    reg_write8(CAM_CONFIG, 1)    ;    // write one to force the camera to
                                      // work at the predefined mode
     printf("Configuration mode transmitted\n");
 }
 void capture_image() {
-    reg_write32(CAM_CAPTURE,1);
+    reg_write32(CAM_CAPTURE, 1);
     printf("Activate the camera to capture image\n");
 }
 void check_status(){
@@ -40,24 +40,13 @@ void check_status(){
 
 int main(void){
 
-    reg_write8(PRESCALER,4);
+    reg_write8(PRESCALER, 4);
 
     check_status();
 
     while((reg_read8(CAM_STATUS)&0x04)==0);
     configure_camera( 0x12, 0x80) ;   // reset the camera to default mode
-//    char idx=7
-//    char addr[8]
-//    while((reg_read8(CAM_STATUS)&0x04)==0){
-//        char c_low=reg_read8(SIOC_SIOD)&0x02;
-//        char c_high=reg_read8(SIOC_SIOD)&0x02;
-//
-//        if(c_high-c_low){
-//            if(phase==0&&(idx!=(-1))){
-//
-//            }
-//        }
-//    }
+
     printf("Reset the camera \n");
     while((reg_read8(CAM_STATUS)&0x04)==0);        // wait until sccb interface is ready
 

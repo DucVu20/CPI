@@ -1,6 +1,6 @@
-package CPITest
+package cpi
 
-import CPI.single_port_ram
+import cpi.single_port_ram
 import chisel3._
 import chisel3.iotesters._
 import org.scalatest._

@@ -1,4 +1,4 @@
-package CPI
+package cpi
 
 import chisel3._
 import chisel3.util._

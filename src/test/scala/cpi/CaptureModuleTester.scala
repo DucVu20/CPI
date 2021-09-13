@@ -1,6 +1,6 @@
-package CPITest
+package cpi
 
-import CPI.CaptureModule
+import cpi.CaptureModule
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
@@ -141,17 +141,17 @@ class WaveOfCaptureModule extends FlatSpec with Matchers {
 }
 
 class CaptureModuleSingleClockSpec extends FlatSpec with Matchers {
-  "Capture Module Single Clock Gray Scale" should "pass" in {
+  "Capture Module Single Clock Gray " should "pass" in {
     chisel3.iotesters.Driver(() => new CaptureModule(
-      10, 10,
-      2,400)) { c =>
+      100, 100,
+      2,100*100)) { c =>
       new CaptureModuleTester(c)(4, 0)
     } should be(true)
   }
-  "Capture Module Single Clock RGB image" should "pass" in {
+  "Capture Module Single Clock RGB " should "pass" in {
     chisel3.iotesters.Driver (() => new CaptureModule(
-      10,10,
-      2, 400)) { c =>
+      100,100,
+      2, 100*100)) { c =>
       new CaptureModuleTester(c)(4,1)
     } should be (true)
   }
