@@ -11,6 +11,7 @@ import freechips.rocketchip.regmapper.{HasRegMap, RegField}
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.UIntIsOneOf
 import chipyard.iobinders.{OverrideIOBinder}
+import freechips.rocketchip.tile._
 
 case class CPIParams(
                       address: BigInt        = 0x10003000,
@@ -19,8 +20,8 @@ case class CPIParams(
                       imgHeight: Int         = 480,
                       bytePerPixel: Int      = 2,
                       bufferDepth: Int       = 640*480,
-                      sccbFreqkHz: Int    = 100,
-                      systemFreqMHz: Int  = 50,
+                      sccbFreqkHz: Int       = 100,
+                      systemFreqMHz: Int     = 50,
                       maxPrescaler: Int      = 32
                     )
 object CPIMOMI{
@@ -73,10 +74,6 @@ trait CPIPortIO extends Bundle{
   val vsync   = Input(Bool())
   val pixelIn = Input(UInt(8.W))
   val XCLK    = Output(Clock())
-}
-
-class CPIInterrupts extends Bundle{
-  val newFrame = Bool()
 }
 
 trait HasCPIIO extends BaseModule{
@@ -254,6 +251,7 @@ trait CanHavePeripheryCPIModuleImp extends LazyModuleImp {
       cpiPort.XCLK          := cpi.module.io.XCLK
 
       Some(cpiPort)
+      dontTouch(cpiPort)
     }
     case None => None
   }
