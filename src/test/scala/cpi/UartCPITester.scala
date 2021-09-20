@@ -7,7 +7,7 @@ import chisel3.iotesters.Driver
 
 
 class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
-  def software_tx(character:Int): Unit ={
+  def softwareTx(character:Int): Unit ={
     poke(dut.io.rx, 0)
     step(3)
     // 8 data bits
@@ -20,21 +20,21 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
       step(1)
     }
   }
-  def check_trasmitted_bytes(transmitted_byte: Int, dataName:String): Unit ={
-    if(expect(dut.io.rxBits.get, transmitted_byte)){
-      println(dataName+" transmitted "+transmitted_byte.toString+" matched received "+dataName)
-    }
-    else {
-      println(dataName+" transmitted is "+transmitted_byte.toString
-        +" while received "+dataName+" is "+peek(dut.io.rxBits.get).toString)
-    }
-  }
-  def transmit_three_bytes(opcode: Int, addr: Int, data: Int): Unit ={
-    software_tx(opcode)
+//  def check_trasmitted_bytes(transmitted_byte: Int, dataName:String): Unit ={
+//    if(expect(dut.io.rxBits.get, transmitted_byte)){
+//      println(dataName+" transmitted "+transmitted_byte.toString+" matched received "+dataName)
+//    }
+//    else {
+//      println(dataName+" transmitted is "+transmitted_byte.toString
+//        +" while received "+dataName+" is "+peek(dut.io.rxBits.get).toString)
+//    }
+//  }
+  def transmitThreeBytes(opcode: Int, addr: Int, data: Int): Unit ={
+    softwareTx(opcode)
     step(5)
-    software_tx(addr)
+    softwareTx(addr)
     step(5)
-    software_tx(data)
+    softwareTx(data)
     step(5)
   }
 
@@ -43,10 +43,10 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
       step(1)
       //println("waiting")
     }
-    poke(dut.io.cpuReady.get, true.B)
+    poke(dut.io.cpuReady.get, 1)
     println(message+peek(dut.io.cpuReadData.get).toInt.toHexString)
     step(1)
-    poke(dut.io.cpuReady.get, false.B)
+    poke(dut.io.cpuReady.get, 0)
     step(1)
   }
   def getPixel: Int ={
@@ -63,24 +63,24 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
     return pixel
   }
 
-  poke(dut.io.rx, true.B )
+  poke(dut.io.rx, 1 )
   step(300)
 
   val dontCare = 0x7C
   println("Check sccb status, 1 is ready, otherwise")
-  transmit_three_bytes(0x00, dontCare, dontCare)
+  transmitThreeBytes(0x00, dontCare, dontCare)
   step(1)
   getTransmittedBytes("SCCB status is: ")
 
   println("configure working mode for the camera: addr=0x87, data=0x55")
-  transmit_three_bytes( 0x01, 0x87, 0x55)
+  transmitThreeBytes( 0x01, 0x87, 0x55)
 
   println("check camera's status")
-  transmit_three_bytes( 0x03, dontCare, dontCare)
+  transmitThreeBytes( 0x03, dontCare, dontCare)
   getTransmittedBytes("Camera status is: ")
 
   println("generate a capture signal and wait until vsync goes from high to low")
-  transmit_three_bytes( 0x02, dontCare, dontCare)
+  transmitThreeBytes( 0x02, dontCare, dontCare)
 
   val width = dut.width
   val height = dut.height
@@ -137,12 +137,12 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
 
   //===========================wait for 200 clock cycles, then read img from the buffer========/
   println("check buffer status")
-  transmit_three_bytes(0x04, dontCare, dontCare)
+  transmitThreeBytes(0x04, dontCare, dontCare)
   getTransmittedBytes("Buffer status is: ")
 
   step(500)
   println("read image from the buffer")
-  transmit_three_bytes(0x05, dontCare, dontCare)
+  transmitThreeBytes(0x05, dontCare, dontCare)
   var idx1=(0)
   var n_test_passed = 0
   for(a<- 0 until width*height){
