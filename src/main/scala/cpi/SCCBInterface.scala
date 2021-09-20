@@ -35,20 +35,20 @@ class SCCBInterface(CLK_FREQ_MHz: Int, SCCB_FREQ_KHz: Int) extends Module{
   val SIOD           = RegInit(false.B)
   val FmsReturnState = RegInit(0.U(4.W))
 
-  val fms_idle::fms_start::fms_load_byte::fms_tx_byte_low::fms_tx_byte_high::fms_index_check::fms_stop1::fms_stop2::fms_done::fms_sccb_timer::Nil = Enum(10)
-  val FMS               = RegInit(fms_idle)
+  val fmsIdle::fmsStart::fmsLoadByte::fmsTxByteLow::fmsTxByteHigh::fmsIndexCheck::fmsStop1::fmsStop2::fmsDone::fmsSccbTimer::Nil = Enum(10)
+  val FMS               = RegInit(fmsIdle)
 
   io.sccbReady  := sccbReady
   io.SIOD       := SIOD
   io.SIOC       := SIOC
 
   switch(FMS){
-    is(fms_idle){
+    is(fmsIdle){
       SIOC := false.B     // bring SIOC, SIOD high
       SIOD := false.B
       sccbReady := true.B
       when(io.config){
-        FMS        := fms_start
+        FMS        := fmsStart
         sccbReady := false.B
       }
       latchedData := io.configData
@@ -57,19 +57,19 @@ class SCCBInterface(CLK_FREQ_MHz: Int, SCCB_FREQ_KHz: Int) extends Module{
       byteIndex   := 0.U
       byteCounter := 0.U
     }
-    is(fms_start){           // bring SIOC high, SIOD low
+    is(fmsStart){           // bring SIOC high, SIOD low
       sccbReady       := false.B
       SIOC            := false.B
       SIOD            := true.B
-      FMS             := fms_sccb_timer            // generate SIOC
-      FmsReturnState  := fms_load_byte
+      FMS             := fmsSccbTimer            // generate SIOC
+      FmsReturnState  := fmsLoadByte
       sccbTimer       := timer.U
     }
-    is(fms_load_byte){    // 1 clock
+    is(fmsLoadByte){    // 1 clock
       sccbReady := false.B
-      FMS        := fms_tx_byte_low
+      FMS        := fmsTxByteLow
       when(byteCounter===3.U ){
-        FMS:=fms_stop1
+        FMS:=fmsStop1
       }
       byteIndex   := 0.U
       byteCounter := byteCounter + 1.U
@@ -80,54 +80,54 @@ class SCCBInterface(CLK_FREQ_MHz: Int, SCCB_FREQ_KHz: Int) extends Module{
         is(3.U) { txByte := latchedData}
       }
     }
-    is(fms_tx_byte_low){            // start inserting SIOD when SIOC is low for t_sccb/2
+    is(fmsTxByteLow){            // start inserting SIOD when SIOC is low for t_sccb/2
       sccbReady      := false.B
       SIOC           := true.B
-      FMS            := fms_sccb_timer     // data on low edge of SIOC
-      FmsReturnState := fms_tx_byte_high
+      FMS            := fmsSccbTimer     // data on low edge of SIOC
+      FmsReturnState := fmsTxByteHigh
       sccbTimer      := timer.U
       SIOD           := Mux(byteIndex===8.U,0.U,!txByte(7))
     }
-    is(fms_tx_byte_high){       // keep SIOD same as when SIOC is high, finish one sccb clock for SIOD
+    is(fmsTxByteHigh){       // keep SIOD same as when SIOC is high, finish one sccb clock for SIOD
       sccbReady      := false.B
       SIOC           := false.B
-      FMS            := fms_sccb_timer
+      FMS            := fmsSccbTimer
       sccbTimer      := (timer/2).toInt.U
-      FmsReturnState := fms_index_check
+      FmsReturnState := fmsIndexCheck
     }
-    is(fms_index_check){
+    is(fmsIndexCheck){
       sccbReady       := false.B
       byteIndex := byteIndex + 1.U
       txByte    := txByte<<1
       when(byteIndex===8.U){           // when one byte is loaded successfully, along with dont care bit, load the next byte
-        FMS := fms_load_byte
+        FMS := fmsLoadByte
       }.otherwise{
-        FMS := fms_tx_byte_low
+        FMS := fmsTxByteLow
       }
     }
-    is(fms_stop1){  // bring SIOC high, SIOD low
+    is(fmsStop1){  // bring SIOC high, SIOD low
       sccbReady      := false.B
       SIOC           := false.B
       SIOD           := true.B
       sccbTimer      := timer.U
-      FMS            := fms_sccb_timer
-      FmsReturnState := fms_stop2
+      FMS            := fmsSccbTimer
+      FmsReturnState := fmsStop2
     }
-    is(fms_stop2){  // bring SIOD high
+    is(fmsStop2){  // bring SIOD high
       sccbReady      := false.B
       SIOD           := false.B
       SIOC           := false.B
       sccbTimer      := timer.U
-      FMS            := fms_sccb_timer
-      FmsReturnState := fms_done
+      FMS            := fmsSccbTimer
+      FmsReturnState := fmsDone
     }
-    is(fms_done){ // add delay between transactions
+    is(fmsDone){ // add delay between transactions
       sccbReady      := false.B
       sccbTimer      := timer.U
-      FmsReturnState := fms_idle
-      FMS            := fms_sccb_timer
+      FmsReturnState := fmsIdle
+      FMS            := fmsSccbTimer
     }
-    is(fms_sccb_timer){           // delay state to create SIOC low and high
+    is(fmsSccbTimer){           // delay state to create SIOC low and high
       sccbReady       := false.B
       FMS := Mux(sccbTimer===0.U, FmsReturnState, FMS)
       sccbTimer := Mux(sccbTimer===0.U,0.U, sccbTimer - 1.U)
