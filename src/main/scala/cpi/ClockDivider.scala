@@ -1,20 +1,20 @@
-package cpi
+package sislab.cpi
 
 import chisel3._
 import chisel3.util._
 
 class ClockDivider(maxPrescaler: Int) extends Module{
-  val io=IO(new Bundle{
-    val clock_in      = Input(Clock())
-    val divided_clock = Output(Clock())
+  val io = IO(new Bundle {
+    val clockIn      = Input(Clock())
+    val dividedClock = Output(Clock())
     val reset         = Input(Bool())
     val prescaler     = Input(UInt(log2Ceil(maxPrescaler).W))
   })
-  val counter_width = io.prescaler.getWidth
+  val counterWidth = io.prescaler.getWidth
 
-  withClockAndReset(io.clock_in, io.reset){
+  withClockAndReset(io.clockIn, io.reset){
     val max           = io.prescaler>>1
-    val counter       = RegInit(0.U(counter_width.W))
+    val counter       = RegInit(0.U(counterWidth.W))
     val divided_clock = RegInit(false.B)
 
     counter         := counter+1.U
@@ -26,21 +26,21 @@ class ClockDivider(maxPrescaler: Int) extends Module{
       counter       := 0.U
       divided_clock := false.B
     }
-    io.divided_clock:= divided_clock.asClock()
+    io.dividedClock:= divided_clock.asClock()
   }
 }
 
 class ClockDividerDemo(maxPrescaler:Int) extends Module{
-  val io=IO(new Bundle{
+  val io = IO(new Bundle {
     val reset         = Input(Bool())
-    val divided_clock = Output(Clock())
+    val dividedClock = Output(Clock())
     val prescaler     = Input(UInt(log2Ceil(maxPrescaler).W))
   })
   val clk_div=Module(new ClockDivider(maxPrescaler))
-  clk_div.io.clock_in :=clock
+  clk_div.io.clockIn :=clock
   clk_div.io.reset    :=io.reset
   clk_div.io.prescaler:=io.prescaler
-  io.divided_clock    :=clk_div.io.divided_clock
+  io.dividedClock    :=clk_div.io.dividedClock
 
-  println(clk_div.io.divided_clock.name)
+  println(clk_div.io.dividedClock.name)
 }

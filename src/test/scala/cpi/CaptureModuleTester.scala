@@ -1,6 +1,5 @@
-package cpi
+package sislab.cpi
 
-import cpi.CaptureModule
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
@@ -66,25 +65,26 @@ class CaptureModuleTester(dut:CaptureModule)(n:Int) extends PeekPokeTester(dut) 
     //=========================validation============================//
 
     while (peek(dut.io.frameFull) == 1) {
-      step(scala.util.Random.nextInt(10))
       poke(dut.io.readFrame, true.B)
       step(1)
 
       var idx_out = peek(dut.io.pixelAddr).toInt // pixel_address
       var refPixelVal = new referenceFrame().validate(idx_out, refFrame)
 
-      //println("ref: "+refPixelVal.toHexString+" got "+peek(dut.io.pixelOut).toInt.toHexString)
+//      println("ref: "+refPixelVal.toHexString+" got "+peek(dut.io.pixelOut).toInt.toHexString)
       if (imageFormat == 1) {
         expect(dut.io.pixelOut, refPixelVal)
       }
       else {
         expect(dut.io.pixelOut, refPixelVal)
       }
-      poke(dut.io.readFrame, false.B)
-      //step(1)
     }
+    poke(dut.io.readFrame, false)
     step(200)
   }
+  Console.out.println(Console.BLUE+"the total number of tests must be passed is: "+
+    Console.YELLOW+width*height*2 + Console.RESET)
+  println()
 }
 
 class referenceFrame{
@@ -138,7 +138,7 @@ class referenceFrame{
 class CaptureModuleSpec extends FlatSpec with Matchers {
   "Capture Module Single Clock Gray and RGB " should "pass" in {
     chisel3.iotesters.Driver(() => new CaptureModule(
-      100,90,
+      30,20,
       2,100*100)) { c =>
       new CaptureModuleTester(c)(4)
     } should be(true)

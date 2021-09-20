@@ -1,4 +1,4 @@
-package cpi
+package sislab.cpi
 
 import chisel3._
 import chisel3.iotesters.PeekPokeTester

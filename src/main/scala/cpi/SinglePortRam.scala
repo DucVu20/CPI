@@ -1,21 +1,21 @@
-package cpi
+package sislab.cpi
 
 import chisel3._
 import chisel3.util._
 
-class single_port_ram[T <: Data](mem_depth: Int,
-                                 gen: T) extends Module {
-  val addr_width = log2Ceil(mem_depth)
+class SinglePortRam[T <: Data](memDepth: Int,
+                               gen: T) extends Module {
+  val depth = memDepth
   val io = IO(new Bundle {
-    val addr     = Input(UInt(addr_width.W))
-    val data_in  = Input(gen)
-    val data_out = Output(gen)
+    val addr     = Input(UInt(log2Ceil(memDepth).W))
+    val dataIn  = Input(gen)
+    val dataOut = Output(gen)
     val wrEna    = Input(Bool())
     val rdEna    = Input(Bool())
   })
-  val mem = SyncReadMem(mem_depth, gen)
+  val mem = SyncReadMem(memDepth, gen)
   when(io.wrEna) {
-    mem.write(io.addr, io.data_in)
+    mem.write(io.addr, io.dataIn)
   }
-  io.data_out := mem.read(io.addr, io.rdEna)
+  io.dataOut := mem.read(io.addr, io.rdEna)
 }

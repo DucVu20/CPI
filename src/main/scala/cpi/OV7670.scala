@@ -1,4 +1,4 @@
-package cpi
+package sislab.cpi
 
 import chisel3._
 import chisel3.util._
@@ -10,8 +10,6 @@ import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.regmapper.{HasRegMap, RegField}
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.UIntIsOneOf
-import chipyard.iobinders.{OverrideIOBinder}
-import freechips.rocketchip.tile._
 
 case class CPIParams(
                       address: BigInt        = 0x10003000,
@@ -22,7 +20,7 @@ case class CPIParams(
                       bufferDepth: Int       = 640*480,
                       sccbFreqkHz: Int       = 100,
                       systemFreqMHz: Int     = 50,
-                      maxPrescaler: Int      = 32
+                      maxPrescaler: Int      = 16
                     )
 object CPIMOMI{
   val camStatus                = 0x00
@@ -59,7 +57,7 @@ class CPIIO(p: CPIParams) extends Bundle{
   val frameFull    = Output(Bool()) // valid
 
   val config         = Input(Bool())
-  val sccb_ready     = Output(Bool())
+  val sccbReady      = Output(Bool())
   val SIOC           = Output(Bool())
   val SIOD           = Output(UInt(1.W))
   val configData     = Input(UInt(8.W))
@@ -76,10 +74,13 @@ trait CPIPortIO extends Bundle{
   val XCLK    = Output(Clock())
 }
 
+class CPIInterrupts extends Bundle{
+  val newFrame = Bool()
+}
+
 trait HasCPIIO extends BaseModule{
   val io = IO(new CPIIO(CPIParams.apply()))
 }
-
 
 class CPI(p: CPIParams) extends Module with HasCPIIO {
 
@@ -103,17 +104,17 @@ class CPI(p: CPIParams) extends Module with HasCPIIO {
   io.capturing   := captureModule.io.capturing
   io.frameFull   := captureModule.io.frameFull
 
-  XCLKGenerator.io.clock_in  := clock
-  io.XCLK                    := XCLKGenerator.io.divided_clock
+  XCLKGenerator.io.clockIn  := clock
+  io.XCLK                    := XCLKGenerator.io.dividedClock
   XCLKGenerator.io.prescaler := io.prescaler
   XCLKGenerator.io.reset     := io.reset
 
   io.SIOC                    := SCCBInterface.io.SIOC
   io.SIOD                    := SCCBInterface.io.SIOC
-  io.sccb_ready              := SCCBInterface.io.sccb_ready
-  SCCBInterface.io.config          := io.config
-  SCCBInterface.io.config_data     := io.configData
-  SCCBInterface.io.control_address := io.controlAddress
+  io.sccbReady               := SCCBInterface.io.sccbReady
+  SCCBInterface.io.config         := io.config
+  SCCBInterface.io.configData     := io.configData
+  SCCBInterface.io.controlAddress := io.controlAddress
 }
 trait CPIModule extends HasRegMap{
   val io: CPIPortIO
@@ -137,16 +138,16 @@ trait CPIModule extends HasRegMap{
   CPI.io.clock := clock
   CPI.io.reset := reset.asBool
 
-  CPI.io.pclk:= io.pclk
-  CPI.io.href     := io.href
-  CPI.io.vsync    := io.vsync
+  CPI.io.pclk    := io.pclk
+  CPI.io.href    := io.href
+  CPI.io.vsync   := io.vsync
   CPI.io.pixelIn := io.pixelIn
 
   io.SIOC := CPI.io.SIOC
   io.SIOD := CPI.io.SIOC
 
-  io.XCLK := CPI.io.XCLK
-  CPI.io.prescaler:=prescaler
+  io.XCLK          := CPI.io.XCLK
+  CPI.io.prescaler := prescaler
 
   CPI.io.controlAddress := cameraMode(15,8)
   CPI.io.configData     := cameraMode(7,0)
@@ -158,7 +159,7 @@ trait CPIModule extends HasRegMap{
   pixel.valid        := CPI.io.frameFull
   pixelAddr          := CPI.io.pixelAddr
 
-  status := Cat(CPI.io.sccb_ready, CPI.io.frameFull, CPI.io.capturing)
+  status := Cat(CPI.io.sccbReady, CPI.io.frameFull, CPI.io.capturing)
 
   CPI.io.readFrame   := pixel.ready
   returnedResolution := Cat(CPI.io.frameWidth,CPI.io.frameHeight)
@@ -260,4 +261,3 @@ trait CanHavePeripheryCPIModuleImp extends LazyModuleImp {
 class WithOV7670(useAXI4: Boolean) extends Config((site,here, up) => {
   case CPIKey => Some(CPIParams(useAXI4=useAXI4))
 })
-
