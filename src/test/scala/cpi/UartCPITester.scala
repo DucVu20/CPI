@@ -164,21 +164,21 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
     " pixels read via uart matched "+(width*height).toString+" reference pixels "+Console.RESET)
 
 }
-class UartCPIWave extends FlatSpec with Matchers {
-  "Uart CPI waveform " should "pass" in {
-    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-      new CameraUartTop(params.apply(0.01.toFloat,1,
-        30,30,40*30,3000,true))) { c =>
-      new UartCPITester(c)(4)
-    } should be (true)
-  }
-}
+//class UartCPIWave extends FlatSpec with Matchers {
+//  "Uart CPI waveform " should "pass" in {
+//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+//      new CameraUartTop(params.apply(0.01.toFloat,1,
+//        30,30,40*30,3000,true))) { c =>
+//      new UartCPITester(c)(4)
+//    } should be (true)
+//  }
+//}
 
 class UartCPISpec extends FlatSpec with Matchers {
   "Uart CPI test " should "pass" in {
     chisel3.iotesters.Driver(() => new CameraUartTop(params.apply(
       0.01.toFloat,1,
-      40,40,40*30,3000,true))) { c =>
+      12,12,40*40,3000,true))) { c =>
       new UartCPITester(c)(4)
     } should be(true)
   }

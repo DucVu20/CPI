@@ -108,7 +108,7 @@ class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
     chisel3.iotesters.Driver (() => new SCCBInterface(
       50,1000)) { c =>
-      new SCCBInterfaceTest(c)(200)
+      new SCCBInterfaceTest(c)(40)
     } should be (true)
   }
 }

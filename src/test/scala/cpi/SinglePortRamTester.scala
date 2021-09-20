@@ -26,11 +26,11 @@ class SinglePortRamTester(dut:SinglePortRam[UInt]) extends PeekPokeTester(dut){
   }
 }
 
-object SinglePortRamTester extends App{
-  chisel3.iotesters.Driver(()=> new SinglePortRam( 4020, UInt(16.W))){ c=>
-    new SinglePortRamTester(c)
-  }
-}
+//object SinglePortRamTester extends App{
+//  chisel3.iotesters.Driver(()=> new SinglePortRam( 4020, UInt(16.W))){ c=>
+//    new SinglePortRamTester(c)
+//  }
+//}
 
 class SinglePortRamSpec extends FlatSpec with Matchers {
   "Single Port Ram" should "pass" in {
