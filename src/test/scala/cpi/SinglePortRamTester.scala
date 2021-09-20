@@ -1,12 +1,11 @@
-package cpi1
+package cpi
 
+import cpi.single_port_ram
 import chisel3._
 import chisel3.iotesters._
 import org.scalatest._
-import cpi.SinglePortRam
-import cpi.cpi.SinglePortRam
 
-class SinglePortRamTester(dut:SinglePortRam[SInt]) extends PeekPokeTester(dut){
+class SinglePortRamTester(dut:single_port_ram[SInt]) extends PeekPokeTester(dut){
   val max_data_input_val=4020
   val mem_depth=2069
   val random_input_Val=Array.fill(2050){scala.util.Random.nextInt(max_data_input_val)}
@@ -29,14 +28,14 @@ class SinglePortRamTester(dut:SinglePortRam[SInt]) extends PeekPokeTester(dut){
 }
 
 object SinglePortRamTester extends App{
-  chisel3.iotesters.Driver(()=> new SinglePortRam( 4020, SInt(16.W))){ c=>
+  chisel3.iotesters.Driver(()=> new single_port_ram( 4020, SInt(16.W))){c=>
     new SinglePortRamTester(c)
   }
 }
 
 class SinglePortRamSpec extends FlatSpec with Matchers {
   "Single Port Ram" should "pass" in {
-    chisel3.iotesters.Driver (() => new SinglePortRam(
+    chisel3.iotesters.Driver (() => new single_port_ram(
       4020, SInt(16.W))) { c =>
       new SinglePortRamTester(c)
     } should be (true)

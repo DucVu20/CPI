@@ -1,10 +1,9 @@
-package cpi1
+package cpi
 
+import cpi.CaptureModule
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
-import cpi.CaptureModule
-import cpi.cpi.CaptureModule
 
 class CaptureModuleTester(dut:CaptureModule)(n:Int) extends PeekPokeTester(dut) {
 
@@ -20,7 +19,7 @@ class CaptureModuleTester(dut:CaptureModule)(n:Int) extends PeekPokeTester(dut) 
 
   for (imageFormat <- 0 until (2)) {
     poke(dut.io.imageFormat, imageFormat)
-    val refFrame = new cpi.referenceFrame().generateRandomFrame(height * width, imageFormat)
+    val refFrame = new referenceFrame().generateRandomFrame(height * width, imageFormat)
 
     poke(dut.io.vsync, false.B)
     poke(dut.io.href, false.B)
@@ -41,7 +40,7 @@ class CaptureModuleTester(dut:CaptureModule)(n:Int) extends PeekPokeTester(dut) 
       poke(dut.io.href, true.B)
       for (row <- 0 until height) {
         for (plk_clock <- 0 until (imageFormat + 1)) {
-          var pixelIn = new cpi.referenceFrame().pixelStream(idx, refFrame,
+          var pixelIn = new referenceFrame().pixelStream(idx, refFrame,
             imageFormat, plk_clock)
 
           poke(dut.io.href, true.B)
@@ -72,7 +71,7 @@ class CaptureModuleTester(dut:CaptureModule)(n:Int) extends PeekPokeTester(dut) 
       step(1)
 
       var idx_out = peek(dut.io.pixelAddr).toInt // pixel_address
-      var refPixelVal = new cpi.referenceFrame().validate(idx_out, refFrame)
+      var refPixelVal = new referenceFrame().validate(idx_out, refFrame)
 
       //println("ref: "+refPixelVal.toHexString+" got "+peek(dut.io.pixelOut).toInt.toHexString)
       if (imageFormat == 1) {
@@ -139,7 +138,7 @@ class referenceFrame{
 class CaptureModuleSpec extends FlatSpec with Matchers {
   "Capture Module Single Clock Gray and RGB " should "pass" in {
     chisel3.iotesters.Driver(() => new CaptureModule(
-      10,10,
+      100,90,
       2,100*100)) { c =>
       new CaptureModuleTester(c)(4)
     } should be(true)

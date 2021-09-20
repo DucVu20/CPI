@@ -1,11 +1,9 @@
-package cpi1
-
+package cpi
 import chisel3._
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
-import cpi.CameraUartTop
-import cpi.cpi.CameraUartTop
+
 
 
 class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
@@ -92,7 +90,7 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
   val tp=2*pclock
   val t_line=50*2*pclock
   //====================synthesized timing========================//
-    val refFrame = new cpi.referenceFrame().generateRandomFrame(height * width, 1)
+    val refFrame = new referenceFrame().generateRandomFrame(height * width, 1)
 
     poke(dut.io.vsync, false.B)
     poke(dut.io.href, false.B)
@@ -111,7 +109,7 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
     poke(dut.io.href, true.B)
     for (row <- 0 until height) {
       for (plk_clock <- 0 until (2)) {
-        var pixelIn = new cpi.referenceFrame().pixelStream(idx, refFrame,
+        var pixelIn = new referenceFrame().pixelStream(idx, refFrame,
           1, plk_clock)
 
         poke(dut.io.href, true.B)
@@ -150,7 +148,7 @@ class UartCPITester(dut: CameraUartTop)(n: Int) extends PeekPokeTester(dut) {
   var n_test_passed = 0
   for(a<- 0 until width*height-1){
     for(clk<- 0 until(2)){
-      var refVal = new cpi.referenceFrame().pixelStream(idx1,refFrame,1,clk)
+      var refVal = new referenceFrame().pixelStream(idx1,refFrame,1,clk)
       val pixel = getPixel
      if(pixel==refVal){
        n_test_passed = n_test_passed + 1

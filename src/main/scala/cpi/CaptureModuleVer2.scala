@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 
 
-class CaptureModule(imgWidth: Int, imgHeight: Int,
+class CaptureModuleVer2(imgWidth: Int, imgHeight: Int,
                     bytePerPixel: Int,
                     bufferDepth: Int )  extends Module {
   val w = imgWidth
@@ -25,6 +25,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
     val capturing    = Output(Bool())
     val readFrame    = Input (Bool()) // ready
     val frameFull    = Output(Bool()) // valid
+   // val rowInterrupt = Output(Bool())
 
   })
   val idle :: capture_frame :: Nil = Enum(2)
@@ -42,29 +43,18 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   val pixelIndex          = RegInit(0.U(log2Ceil(bytePerPixel).W))
   val rowCnt              = RegInit(0.U(log2Ceil(imgWidth).W))
   val colCnt              = RegInit(0.U(log2Ceil(imgHeight).W))
+ // val rowInterrupt        = RegInit(false.B)
 
-  val bufferAddr = WireInit(0.U(log2Ceil(bufferDepth).W))
   val capturing  = WireInit(false.B)
   val wrEnaWire  = WireInit(false.B)
   val wrEna      = RegNext(wrEnaWire)
 
-  val buffer = Module(new single_port_ram(bufferDepth,UInt(pixelBits.W)))
+  val buffer = Module(new DualPortRam(bufferDepth,UInt(pixelBits.W)))
 
-  val pclkRisingEdge   = (io.pclk) & (!RegNext(io.pclk))
-  val vsyncFallingEdge = (!io.vsync) & (RegNext(io.vsync))
+  val pclkRisingEdge   = (io.pclk)   & (!RegNext(io.pclk))
+  val vsyncFallingEdge = (!io.vsync) & RegNext(io.vsync)
+  val hrefFallingEdge  = (!io.href)  & RegNext(io.href)
 
-  //=====================READ ADDRESS GENERATOR==================//
-  when(io.readFrame) {
-    bufferAddr := readPtr
-    readPtr    := readPtr + 1.U
-    when(readPtr === (bufferDepthCounter - 1.U)) {
-      readPtr            := 0.U
-      bufferDepthCounter := 0.U
-      frameDone          := false.B
-    }
-  } otherwise {
-    bufferAddr := RegNext(writePtr)
-  }
 
   captureSignalHolder  := Mux(io.capture, io.capture, captureSignalHolder)
 
@@ -117,27 +107,51 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
       }
     }
   }
+
   //=======================connect signals to the buffer========================//
-  buffer.io.wrEna   := wrEna
-  buffer.io.rdEna   := io.readFrame
-  buffer.io.addr    := bufferAddr
-  buffer.io.data_in := pixel
+  when(io.readFrame) {
+    readPtr    := readPtr + 1.U
+    when(readPtr === (bufferDepthCounter - 1.U)) {
+      readPtr            := 0.U
+      bufferDepthCounter := 0.U
+      frameDone          := false.B
+    }
+  }
+  buffer.io.wrAddr := RegNext(writePtr)
+  buffer.io.wrEna  := wrEna
+  buffer.io.rdAddr := readPtr
+  buffer.io.dataIn := pixel
 
   //==============================IO============================================//
   io.capturing    := capturing
   io.frameWidth   := colCnt
   io.frameHeight  := rowCnt
   io.pixelAddr    := RegNext(readPtr)
-  io.pixelOut     := buffer.io.data_out
+  io.pixelOut     := buffer.io.dataOut
   io.frameFull    := frameDone
 
   //================GET IMAGE RESOLUTION BASED ON HREF, VSYNC ==================//
-  when((io.href) & (!RegNext(io.href))) {
+  when(hrefFallingEdge) {
     rowCnt := rowCnt + 1.U
     colCnt := 0.U
+    //rowInterrupt := true.B
   }
   when(vsyncFallingEdge) {
     rowCnt := 0.U
     colCnt := 0.U
   }
+}
+class DualPortRam[T<: Data](memDepth: Int, gen: T) extends Module{
+  val io=IO(new Bundle{
+    val wrAddr  = Input(UInt(log2Ceil(memDepth).W))
+    val rdAddr  = Input(UInt(log2Ceil(memDepth).W))
+    val wrEna   = Input(Bool())
+    val dataIn  = Input(gen)
+    val dataOut = Output(gen)
+  })
+  val mem = SyncReadMem(memDepth,gen)
+  when(io.wrEna){
+    mem.write(io.wrAddr,io.dataIn)
+  }
+  io.dataOut := mem.read(io.rdAddr)
 }

@@ -1,9 +1,7 @@
-package cpi1
+package cpi
 
 import chisel3._
 import chisel3.iotesters.PeekPokeTester
-import cpi.{Rx, Sender, Tx}
-import cpi.cpi.{Rx, Sender, Tx}
 
 class TxTester(dut: Tx) extends PeekPokeTester(dut) {
 

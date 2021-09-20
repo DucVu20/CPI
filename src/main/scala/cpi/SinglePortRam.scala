@@ -3,8 +3,8 @@ package cpi
 import chisel3._
 import chisel3.util._
 
-class SinglePortRam[T <: Data](mem_depth: Int,
-                               gen: T) extends Module {
+class single_port_ram[T <: Data](mem_depth: Int,
+                                 gen: T) extends Module {
   val addr_width = log2Ceil(mem_depth)
   val io = IO(new Bundle {
     val addr     = Input(UInt(addr_width.W))

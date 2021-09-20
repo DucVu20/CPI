@@ -1,10 +1,9 @@
-package cpi1
+package cpi
 
+import cpi.ClockDividerDemo
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
-import cpi.ClockDividerDemo
-import cpi.cpi.ClockDividerDemo
 
 
 class ClockDividerTest(dut:ClockDividerDemo) extends PeekPokeTester(dut){
