@@ -220,5 +220,5 @@ class CameraUartTop(p: params) extends  Module {
 
 object UartCPI extends App {
   chisel3.Driver.execute(Array[String](), () =>
-    new CameraUartTop(params.apply(50,50, 640,480,640*480,115200,true)))
+    new CameraUartTop(params.apply(50,50, 640,480,640*480,115200,false)))
 }
