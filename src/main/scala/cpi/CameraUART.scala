@@ -3,18 +3,41 @@ package cpi
 import chisel3._
 import chisel3.util._
 
-object Types{
-  val configure_camera::capture_image::image_status::read_image::Nil=Enum(4)
+class OV7670Wires(imgWidth: Int, imgHeight: Int,
+                  bufferDepth: Int) extends Module{
+  val io=IO(new Bundle{
+    val pclk         = Input (Bool())
+    val href         = Input (Bool())
+    val vsync        = Input (Bool())
+    val pixelIn      = Input (UInt(8.W))
+    val pixelOut     = Output(UInt(16.W))
+    val pixelAddr    = Output(UInt(log2Ceil(bufferDepth).W))
+    val frameWidth   = Output(UInt(log2Ceil(imgWidth).W))
+    val frameHeight  = Output(UInt(log2Ceil(imgHeight).W))
+    val imageFormat  = Input(UInt(1.W))                // either RGB or gray
+    val capture      = Input (Bool())
+    val capturing    = Output(Bool())
+    val readFrame    = Input (Bool()) // ready
+    val frameFull    = Output(Bool()) // valid
+  })
 }
 
-class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
-                    img_width: Int, img_height: Int,
-                    bufferDepth: Int,baudRate: Int) extends  Module {
+class CameraUartTop(CLK_FREQ_MHz: Float, SCCB_FREQ_kHz: Int,
+                    imgWidth: Int, imgHeight: Int,
+                    bufferDepth: Int, baudRate: Int
+                    ) extends  Module {
   val MHz=scala.math.pow(10,6)
   // add modules
-  val frame_capture = Module(new CaptureModule(img_width, img_height,
+//  val captureModuleInterface = Module(new OV7670Wires(imgWidth,
+//    imgHeight,bufferDepth))
+
+  var captureModuleInterface = Module(new CaptureModule(imgWidth, imgHeight,
     2, bufferDepth))
-  val sccb_interface = Module(new SCCBInterface(CLK_FREQ_MHz, SCCB_FREQ_kHz))
+
+
+  val width = imgWidth
+  val height = imgHeight
+  val sccb_interface = Module(new SCCBInterface((CLK_FREQ_MHz*MHz).toInt, SCCB_FREQ_kHz))
   val receiver = Module(new Rx_ver1((CLK_FREQ_MHz*MHz).toInt, baudRate))
   val transmitter = Module(new Tx((CLK_FREQ_MHz*MHz).toInt, baudRate))
 
@@ -31,23 +54,23 @@ class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
     val SIOD = Output(UInt(1.W))
 
     //delete later
-//    val valid=Output(Bool())
-//    val rx_bits=Output(UInt(8.W))
-//    val cpu_read_data=Output(UInt(8.W))
-//    val cpu_echo_valid=Output(Bool())
-//    val cpu_ready=Input(Bool())
+    val valid=Output(Bool())
+    val rx_bits=Output(UInt(8.W))
+    val cpu_read_data=Output(UInt(8.W))
+    val cpu_echo_valid=Output(Bool())
+    val cpu_ready=Input(Bool())
   })
   io.rx<>receiver.io.rxd
   io.tx<>transmitter.io.txd
 //  /// delete later
-//  io.valid<>receiver.io.valid
-//  io.rx_bits<>receiver.io.bits
-//
-//  val echo_cpu=Module(new Rx((CLK_FREQ_MHz*MHz).toInt, baudRate))
-//  echo_cpu.io.rxd<>transmitter.io.txd
-//  echo_cpu.io.channel.bits<>io.cpu_read_data
-//  echo_cpu.io.channel.valid<>io.cpu_echo_valid
-//  echo_cpu.io.channel.ready<>io.cpu_ready
+  io.valid<>receiver.io.valid
+  io.rx_bits<>receiver.io.bits
+
+  val echo_cpu=Module(new Rx((CLK_FREQ_MHz*MHz).toInt, baudRate))
+  echo_cpu.io.rxd<>transmitter.io.txd
+  echo_cpu.io.channel.bits<>io.cpu_read_data
+  echo_cpu.io.channel.valid<>io.cpu_echo_valid
+  echo_cpu.io.channel.ready<>io.cpu_ready
 //  //delete later
 
   val idle ::fetch :: Nil = Enum(2)
@@ -122,7 +145,7 @@ class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
         }
         is(3.U){  // check whether the camera is capturing image or not
           when(tx_ready){
-            tx_data:=frame_capture.io.capturing
+            tx_data:=captureModuleInterface.io.capturing
             FMS:=idle
             tx_valid:=true.B
           }
@@ -130,12 +153,12 @@ class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
         is(4.U){  //check buffer status
           when(tx_ready){
             tx_valid:=true.B
-            tx_data:=frame_capture.io.frameFull
+            tx_data:=captureModuleInterface.io.frameFull
             FMS:=idle
           }
         }
         is(5.U){  // read image
-          when(frame_capture.io.frameFull){
+          when(captureModuleInterface.io.frameFull){
             read_image:=true.B
             FMS:=idle
           }
@@ -147,9 +170,9 @@ class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
   val read_pixel=WireInit(false.B)
   val byte_counter=RegInit(0.U(1.W))
   val pixel=RegInit(0.U(16.W))
-  pixel:=Mux(read_pixel,frame_capture.io.pixelOut,pixel)
-  val pixel_byte=Mux(byte_counter===1.U,pixel(15,8),pixel(7,0))
-  Mux(read_pixel,frame_capture.io.pixelOut,pixel)    // load new pixel when read_pixel is inserted
+  pixel:=Mux(read_pixel,captureModuleInterface.io.pixelOut,pixel)
+  val pixel_byte=Mux(byte_counter===1.U,pixel(7,0),pixel(15,8))
+  Mux(read_pixel,captureModuleInterface.io.pixelOut,pixel)    // load new pixel when read_pixel is inserted
                                                         // and increase the address of the next pixel
 
   val tx_idle::load_pixel:: transmit_to_cpu::waiting::Nil=Enum(4)
@@ -176,7 +199,7 @@ class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
       when(transmitter.io.channel.ready){
         tx_fms:=Mux(byte_counter.asBool,transmit_to_cpu,load_pixel)
       }
-      when(!frame_capture.io.frameFull){ // when empty, done reading
+      when(!captureModuleInterface.io.frameFull){ // when empty, done reading
         tx_fms:=idle
       }
     }
@@ -189,20 +212,25 @@ class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
   io.SIOC:=sccb_interface.io.SIOC
   io.SIOD:=sccb_interface.io.SIOD
   // capture module
-  frame_capture.io.frameFull<>read_pixel
-  frame_capture.io.pclk<>io.p_clk
-  frame_capture.io.href<>io.href
-  frame_capture.io.vsync<>io.vsync
-  frame_capture.io.pixelIn<>io.pixel_in
-  frame_capture.io.capture:=capture
+  captureModuleInterface.io.readFrame<>read_pixel
+  captureModuleInterface.io.pclk<>io.p_clk
+  captureModuleInterface.io.href<>io.href
+  captureModuleInterface.io.vsync<>io.vsync
+  captureModuleInterface.io.pixelIn<>io.pixel_in
+  captureModuleInterface.io.capture:=capture
+  captureModuleInterface.io.imageFormat := 1.U
+
+  val frameWidth = Wire(UInt(log2Ceil(imgWidth).W))
+  val frameHeight = Wire(UInt(log2Ceil(imgHeight).W))
+  captureModuleInterface.io.frameWidth <> frameWidth
+  captureModuleInterface.io.frameHeight <> frameHeight
+
   // transmitter
   transmitter.io.channel.valid:=tx_valid // default is false
   transmitter.io.channel.bits:=tx_data
 }
 
-// I suspose you should feed low frequency clock to the OV7670 first, 10MHz first, let's say.
-// CLK_FREQ and SCCB_FREQ are double type, so you can use
-object camera_top_v extends App {
+object UartCPIVer1 extends App {
   chisel3.Driver.execute(Array[String](), () => new CameraUartTop(50,50,
     640,480,640*480,115200))
 }

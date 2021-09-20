@@ -1,9 +1,10 @@
-package cpi
+package cpi1
 
-import cpi.SCCBInterface
 import chisel3._
 import chisel3.iotesters.{Driver, _}
 import org.scalatest._
+import cpi.SCCBInterface
+import cpi.cpi.SCCBInterface
 
 class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCBInterface){
 

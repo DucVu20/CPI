@@ -48,7 +48,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   val wrEnaWire  = WireInit(false.B)
   val wrEna      = RegNext(wrEnaWire)
 
-  val buffer = Module(new single_port_ram(bufferDepth,UInt(pixelBits.W)))
+  val buffer = Module(new SinglePortRam(bufferDepth,UInt(pixelBits.W)))
 
   val pclkRisingEdge   = (io.pclk) & (!RegNext(io.pclk))
   val vsyncFallingEdge = (!io.vsync) & (RegNext(io.vsync))
@@ -140,4 +140,8 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
     rowCnt := 0.U
     colCnt := 0.U
   }
+}
+object CaptureModuleVer1 extends App {
+  chisel3.Driver.execute(Array[String](), () => new CaptureModule(640,
+    480,2,640*480))
 }
