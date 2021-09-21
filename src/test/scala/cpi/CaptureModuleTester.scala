@@ -120,12 +120,13 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       dut.io.readFrame.poke(false.B)
       dut.clock.step(50)
     }
-    Console.out.println(Console.YELLOW+nTestPassed+" tests passed over "+
-      Console.YELLOW+width*height*2+ " being tested"+ Console.RESET)
+    Console.out.println(Console.YELLOW+"CPI testing result: "+nTestPassed+
+      " tests passed over "+ Console.YELLOW+width*height*2+ " being tested"+
+      Console.RESET)
   }
 
   it should "pass" in {
-    test(new CaptureModule(40, 30, 2, 30*32))
+    test(new CaptureModule(12, 12, 2, 30*32))
     { dut => CaptureModuleTest(dut,4)}
   }
 }
