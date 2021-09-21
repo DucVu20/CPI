@@ -15,18 +15,18 @@ class ClockDivider(maxPrescaler: Int) extends Module{
   withClockAndReset(io.clockIn, io.reset){
     val max           = io.prescaler>>1
     val counter       = RegInit(0.U(counterWidth.W))
-    val divided_clock = RegInit(false.B)
+    val dividedClock = RegInit(false.B)
 
     counter         := counter+1.U
     when(counter===(max.asUInt-1.U)){
-      divided_clock := (~divided_clock) // toggle
+      dividedClock := (~dividedClock) // toggle
       counter       := 0.U
     }
     when(io.reset){
       counter       := 0.U
-      divided_clock := false.B
+      dividedClock := false.B
     }
-    io.dividedClock:= divided_clock.asClock()
+    io.dividedClock:= dividedClock.asClock()
   }
 }
 
