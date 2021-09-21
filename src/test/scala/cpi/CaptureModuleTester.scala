@@ -51,13 +51,13 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
     val pclock = n
     var nTestPassed = 0
 
-    println("generate a random frame")
     val tp = 2 * pclock
-    val t_line = 10 * pclock
+    val t_line = 2 * pclock
     //====================synthesized timing========================//
 
     for (imageFormat <- 0 until(2)) {
       dut.io.imageFormat.poke(imageFormat.U)
+      println("generate a random frame")
       val refFrame = new referenceFrame().generateRandomFrame(height * width, imageFormat)
 
       dut.io.vsync.poke(false.B)
@@ -73,6 +73,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       dut.io.href.poke(false.B)
       dut.clock.step(t_line)
 
+      println("begin generating signals for format"+ (if(imageFormat==0) " Gray" else " RGB"))
       var idx = 0
       var pclk = true
       for (col <- 0 until(width)){
@@ -104,11 +105,15 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       dut.clock.step(tp)
 
       //====================validation=======================//
+      println("begin to validate captured frame")
+
+      dut.clock.setTimeout(width*height*(imageFormat + 1) + 50)
+      // this must be inserted if no input signals are changed for more than 1000 cycles
+      // read all data from the buffer requires the number of cycles equal to the buffer's depth
 
       while (dut.io.frameFull.peek.litToBoolean) {
         dut.io.readFrame.poke(true.B)
         dut.clock.step(1)
-
         var idx_out = dut.io.pixelAddr.peek.litValue.toInt // pixel_address
         var refPixelVal = new referenceFrame().validate(idx_out, refFrame).toInt
         dut.io.pixelOut.expect(refPixelVal.U)
@@ -116,6 +121,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
           nTestPassed += 1
         }
       }
+
       dut.io.readFrame.poke(false.B)
       dut.clock.step(50)
     }
@@ -125,7 +131,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
   }
 
   it should "pass" in {
-    test(new CaptureModule(15, 12, 2, 30*32))
+    test(new CaptureModule(60, 50, 2, 60*52))
     { dut => CaptureModuleTest(dut,4)}
   }
 }
