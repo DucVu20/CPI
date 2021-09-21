@@ -15,8 +15,8 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
     val slave_addr=0x42
     val control_addr = scala.util.Random.nextInt(255)
     val config_data  = scala.util.Random.nextInt(255)
-    poke(dut.io.control_address, control_addr)
-    poke(dut.io.config_data, config_data)
+    poke(dut.io.controlAddress, control_addr)
+    poke(dut.io.configData, config_data)
     poke(dut.io.config, false)
 
     step(scala.util.Random.nextInt(10))
@@ -31,7 +31,7 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
     var phase = 0
 
     //Inverse the output of SIOD, and SIOC
-    while(peek(dut.io.sccb_ready)==0){
+    while(peek(dut.io.sccbReady)==0){
 
       var c_low = (!int2bool(peek(dut.io.SIOC).toInt))
       step(1)
@@ -97,16 +97,18 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
 //    } should be (true)
 //  }
 //}
-object SCCBInterfaceTest extends App{
-  chisel3.iotesters.Driver(() => new SCCBInterface(50, 1000)){ c=>
-    new SCCBInterfaceTest(c)(50)
-  }
-}
+
+//object SCCBInterfaceTest extends App{
+//  chisel3.iotesters.Driver(() => new SCCBInterface(50, 1000)){ c=>
+//    new SCCBInterfaceTest(c)(50)
+//  }
+//}
+
 class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
     chisel3.iotesters.Driver (() => new SCCBInterface(
       50,1000)) { c =>
-      new SCCBInterfaceTest(c)(200)
+      new SCCBInterfaceTest(c)(40)
     } should be (true)
   }
 }

@@ -27,7 +27,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
     val frameFull    = Output(Bool()) // valid
 
   })
-  val idle :: capture_frame :: Nil = Enum(2)
+  val idle :: captureFrame :: Nil = Enum(2)
   val FMS = RegInit(idle)
 
   val writePtr            = RegInit(0.U(log2Ceil(bufferDepth).W))
@@ -38,29 +38,32 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   val captureSignalHolder = RegInit(false.B)  // used to hold the capture
   // signal to capture an image when signals for a new frame is available
   val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
-  val frameDone           = RegInit(false.B)
+  val frameFull           = RegInit(false.B)
   val pixelIndex          = RegInit(0.U(log2Ceil(bytePerPixel).W))
   val rowCnt              = RegInit(0.U(log2Ceil(imgWidth).W))
   val colCnt              = RegInit(0.U(log2Ceil(imgHeight).W))
+  val bufferEmpty         = RegInit(true.B)
 
   val bufferAddr = WireInit(0.U(log2Ceil(bufferDepth).W))
   val capturing  = WireInit(false.B)
   val wrEnaWire  = WireInit(false.B)
   val wrEna      = RegNext(wrEnaWire)
 
-  val buffer = Module(new single_port_ram(bufferDepth,UInt(pixelBits.W)))
+  val buffer = Module(new SinglePortRam(bufferDepth,UInt(pixelBits.W)))
 
-  val pclkRisingEdge   = (io.pclk) & (!RegNext(io.pclk))
-  val vsyncFallingEdge = (!io.vsync) & (RegNext(io.vsync))
+  val pclkRisingEdge   = io.pclk & (!RegNext(io.pclk))
+  val vsyncFallingEdge = (!io.vsync) & RegNext(io.vsync)
+  val hrefFallingEdge  = (!io.href) & RegNext(io.href)
 
   //=====================READ ADDRESS GENERATOR==================//
-  when(io.readFrame) {
+  when(io.readFrame & (!bufferEmpty)) {
     bufferAddr := readPtr
     readPtr    := readPtr + 1.U
     when(readPtr === (bufferDepthCounter - 1.U)) {
       readPtr            := 0.U
       bufferDepthCounter := 0.U
-      frameDone          := false.B
+      frameFull          := false.B
+      bufferEmpty        := true.B
     }
   } otherwise {
     bufferAddr := RegNext(writePtr)
@@ -76,29 +79,28 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
       } otherwise {
         when(captureSignalHolder) {
           when(vsyncFallingEdge) {
-            FMS                 := capture_frame
+            FMS                 := captureFrame
             captureSignalHolder := false.B
-            frameDone           := false.B
+            frameFull           := false.B
           }
         }
       }
       writePtr  := 0.U
       capturing := false.B
     }
-    is(capture_frame) {
+    is(captureFrame) {
+      bufferEmpty := false.B
       capturing := true.B
-      frameDone := Mux(io.vsync, true.B, false.B)
-      FMS       := Mux(io.vsync, idle, capture_frame)
+      frameFull := Mux(io.vsync, true.B, false.B)
+      FMS       := Mux(io.vsync, idle, captureFrame)
 
       when(pclkRisingEdge && (io.href)) {
         when(io.imageFormat===0.U){     //gray scale, 8 bit for 1 pixel
           firstByte  := 0.U
           secondByte := io.pixelIn
           wrEnaWire  := pclkRisingEdge
-          writePtr   := writePtr+1.U
+          writePtr   := writePtr + 1.U
           colCnt     := colCnt + 1.U
-          bufferDepthCounter := bufferDepthCounter + 1.U
-
         }otherwise {                   // RGB 16 bit modes
           pixelIndex := (!pixelIndex)
           switch(pixelIndex) {
@@ -108,9 +110,8 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
             is(1.U) {
               secondByte   := io.pixelIn
               wrEnaWire    := pclkRisingEdge
-              writePtr     := writePtr+1.U
+              writePtr     := writePtr + 1.U
               colCnt       := colCnt + 1.U
-              bufferDepthCounter := bufferDepthCounter + 1.U
             }
           }
         }
@@ -121,20 +122,21 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   buffer.io.wrEna   := wrEna
   buffer.io.rdEna   := io.readFrame
   buffer.io.addr    := bufferAddr
-  buffer.io.data_in := pixel
+  buffer.io.dataIn  := pixel
 
   //==============================IO============================================//
   io.capturing    := capturing
   io.frameWidth   := colCnt
   io.frameHeight  := rowCnt
   io.pixelAddr    := RegNext(readPtr)
-  io.pixelOut     := buffer.io.data_out
-  io.frameFull    := frameDone
+  io.pixelOut     := buffer.io.dataOut
+  io.frameFull    := frameFull
 
   //================GET IMAGE RESOLUTION BASED ON HREF, VSYNC ==================//
-  when((io.href) & (!RegNext(io.href))) {
+  when(hrefFallingEdge) {
     rowCnt := rowCnt + 1.U
     colCnt := 0.U
+    bufferDepthCounter := writePtr
   }
   when(vsyncFallingEdge) {
     rowCnt := 0.U
