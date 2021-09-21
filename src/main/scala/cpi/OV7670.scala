@@ -10,14 +10,7 @@ import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.regmapper.{HasRegMap, RegField}
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.UIntIsOneOf
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-import chipyard.iobinders.{OverrideIOBinder}
-import freechips.rocketchip.tile._
->>>>>>> 02875d36916dbf14e3fe6877203ee7e1fdc8b7e1
-=======
->>>>>>> 7c8cbb88d7641ace0ad764ad32997e62fd254f27
+
 
 case class CPIParams(
                       address: BigInt        = 0x10003000,
