@@ -88,7 +88,6 @@ class SCCBInterfaceTest(dut:SCCBInterface)(nOfRandomTest: Int) extends PeekPokeT
   }
 }
 
-
 class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
     chisel3.iotesters.Driver (() => new SCCBInterface(

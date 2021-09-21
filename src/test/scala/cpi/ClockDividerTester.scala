@@ -24,4 +24,3 @@ class ClockDividerWave extends FlatSpec with Matchers {
     } should be (true)
   }
 }
-
