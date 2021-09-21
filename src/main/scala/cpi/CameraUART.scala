@@ -21,6 +21,7 @@ class CameraUartTop(p: params) extends  Module {
   val sccbInterface = Module(new SCCBInterface((p.systemFreqMHz*MHz).toInt, p.sccbFreqHz))
   val receiver      = Module(new Rx_ver1((p.systemFreqMHz*MHz).toInt, p.baudRate))
   val transmitter   = Module(new Tx((p.systemFreqMHz*MHz).toInt, p.baudRate))
+  //dontTouch(CPI)
 
   val io = IO(new Bundle {
     val rx = Input(UInt(1.W))
@@ -29,7 +30,7 @@ class CameraUartTop(p: params) extends  Module {
     val pclk     = Input(Bool())
     val href     = Input(Bool())
     val vsync    = Input(Bool())
-    val pixel_in = Input(UInt(8.W))
+    val pixelIn = Input(UInt(8.W))
 
     val SIOC = Output(Bool())
     val SIOD = Output(UInt(1.W))
@@ -61,7 +62,7 @@ class CameraUartTop(p: params) extends  Module {
   val funcField = RegInit(0.U(8.W))
   val addrField = RegInit(0.U(8.W))
   val dataField = RegInit(0.U(8.W))
-  val dinByteCounter = RegInit(0.U(2.W))
+  val dinByteCounter           = RegInit(0.U(2.W))
   val dataProcessingIntruction = Cat(funcField, addrField, dataField)
 
   //=============== FMS's control signals=================//
@@ -205,7 +206,7 @@ class CameraUartTop(p: params) extends  Module {
   CPI.io.pclk      := io.pclk
   CPI.io.href      := io.href
   CPI.io.vsync     := io.vsync
-  CPI.io.pixelIn   := io.pixel_in
+  CPI.io.pixelIn   := io.pixelIn
   CPI.io.capture   := capture
   CPI.io.imageFormat := 1.U
 
@@ -218,7 +219,7 @@ class CameraUartTop(p: params) extends  Module {
   transmitter.io.channel.bits:=txData
 }
 
-object UartCPI extends App {
-  chisel3.Driver.execute(Array[String](), () =>
-    new CameraUartTop(params.apply(50,50, 640,480,640*480,115200,false)))
-}
+//object UartCPI extends App {
+//  chisel3.Driver.execute(Array[String](), () =>
+//    new CameraUartTop(params.apply(50,50, 640,480,640*480,115200,false)))
+//}

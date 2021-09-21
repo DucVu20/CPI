@@ -260,6 +260,6 @@ class UartMain(frequency: Int, baudRate: Int) extends Module {
 }
 
 
-object UartMain extends App {
-  chisel3.Driver.execute(Array("--target-dir", "generated"), () => new UartMain(50000000, 115200))
-}
+//object UartMain extends App {
+//  chisel3.Driver.execute(Array("--target-dir", "generated"), () => new UartMain(50000000, 115200))
+//}
