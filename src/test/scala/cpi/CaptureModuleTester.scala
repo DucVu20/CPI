@@ -126,7 +126,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
   }
 
   it should "pass" in {
-    test(new CaptureModule(40, 30, 2, 30*32))
+    test(new CaptureModule(12, 12, 2, 30*32))
     { dut => CaptureModuleTest(dut,4)}
   }
 }
