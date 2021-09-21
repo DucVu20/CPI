@@ -66,8 +66,7 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
       }
     }
   }
-  Console.out.println(Console.YELLOW+"testing results of the SCCB interface are highlighted in blue")
-  Console.out.println(Console.BLUE+"test result: " +number_of_tests_passed.toString+
+  Console.out.println(Console.YELLOW+"test result of SCCB interface: " + number_of_tests_passed.toString+
     " tests passed over "+number_of_test.toString+" being tested"+Console.RESET)
 
   def bin2dec(in:Array[Int]): Int={
@@ -89,20 +88,6 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
   }
 }
 
-//class SCCB_interface_waveform extends FlatSpec with Matchers {
-//  "WaveformCounter" should "pass" in {
-//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-//      new SCCB_interface(50, 100.2 )) { c =>
-//      new SCCB_interface_test(c)(20)
-//    } should be (true)
-//  }
-//}
-
-//object SCCBInterfaceTest extends App{
-//  chisel3.iotesters.Driver(() => new SCCBInterface(50, 1000)){ c=>
-//    new SCCBInterfaceTest(c)(50)
-//  }
-//}
 
 class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
