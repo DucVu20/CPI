@@ -161,8 +161,7 @@ class UarCPITest extends FlatSpec with ChiselScalatestTester{
     }
     dut.clock.step(100)
 
-    Console.out.println(Console.YELLOW+"test result of the CPI-UART is highlighted in blue")
-    Console.out.println(Console.BLUE+(n_test_passed/2).toString+
+    Console.out.println(Console.YELLOW+"test result of CPI-UART: "+(n_test_passed/2).toString+
       " pixels read via uart matched "+(width*height).toString+" reference pixels "+Console.RESET)
   }
   it should "pass" in {
