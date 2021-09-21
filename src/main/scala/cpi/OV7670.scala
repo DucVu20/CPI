@@ -252,7 +252,7 @@ trait CanHavePeripheryCPIModuleImp extends LazyModuleImp {
       cpiPort.XCLK          := cpi.module.io.XCLK
 
       Some(cpiPort)
-      dontTouch(cpiPort)
+      dontTouch(cpiPort)  // FIRTRL wouldn't optimize or remove any components inside don't touch
     }
     case None => None
   }
