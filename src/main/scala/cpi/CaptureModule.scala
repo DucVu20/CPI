@@ -3,7 +3,6 @@ package sislab.cpi
 import chisel3._
 import chisel3.util._
 
-
 class CaptureModule(imgWidth: Int, imgHeight: Int,
                     bytePerPixel: Int,
                     bufferDepth: Int )  extends Module {

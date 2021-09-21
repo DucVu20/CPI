@@ -2,6 +2,8 @@ package sislab.cpi
 
 import chisel3._
 import chisel3.util._
+import chisel3.stage.ChiselStage
+
 case class params(
                    systemFreqMHz: Float,
                    sccbFreqHz: Int,
@@ -219,7 +221,7 @@ class CameraUartTop(p: params) extends  Module {
   transmitter.io.channel.bits:=txData
 }
 
-//object UartCPI extends App {
-//  chisel3.Driver.execute(Array[String](), () =>
-//    new CameraUartTop(params.apply(50,50, 640,480,640*480,115200,false)))
-//}
+object CameraUartTop extends App{
+  new (ChiselStage).emitVerilog(new CameraUartTop(params.apply(50.toFloat,
+    50, 640, 480, 640*480, 115200, false)), Array("--target-dir","generated"))
+}

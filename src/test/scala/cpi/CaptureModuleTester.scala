@@ -46,7 +46,6 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
 
   def CaptureModuleTest[T <: CaptureModule](dut: T, n :Int)={
 
-
     val width = dut.w
     val height = dut.h
     val pclock = n
@@ -126,7 +125,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
   }
 
   it should "pass" in {
-    test(new CaptureModule(12, 12, 2, 30*32))
+    test(new CaptureModule(15, 12, 2, 30*32))
     { dut => CaptureModuleTest(dut,4)}
   }
 }

@@ -169,4 +169,3 @@ class UarCPITest extends FlatSpec with ChiselScalatestTester{
       10,20,60*60,3000,true))) { dut => CpiUartTest(dut, 4)}
   }
 }
-
