@@ -48,7 +48,7 @@ class SCCBInterface(CLK_FREQ_MHz: Int, SCCB_FREQ_KHz: Int) extends Module{
       SIOD := false.B
       sccbReady := true.B
       when(io.config){
-        FMS        := fmsStart
+        FMS       := fmsStart
         sccbReady := false.B
       }
       latchedData := io.configData
@@ -130,7 +130,7 @@ class SCCBInterface(CLK_FREQ_MHz: Int, SCCB_FREQ_KHz: Int) extends Module{
     is(fmsSccbTimer){           // delay state to create SIOC low and high
       sccbReady       := false.B
       FMS := Mux(sccbTimer===0.U, FmsReturnState, FMS)
-      sccbTimer := Mux(sccbTimer===0.U,0.U, sccbTimer - 1.U)
+      sccbTimer := Mux(sccbTimer===0.U, 0.U, sccbTimer - 1.U)
     }
   }
 }

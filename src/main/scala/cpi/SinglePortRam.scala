@@ -7,11 +7,11 @@ class SinglePortRam[T <: Data](memDepth: Int,
                                gen: T) extends Module {
   val depth = memDepth
   val io = IO(new Bundle {
-    val addr     = Input(UInt(log2Ceil(memDepth).W))
+    val addr    = Input(UInt(log2Ceil(memDepth).W))
     val dataIn  = Input(gen)
     val dataOut = Output(gen)
-    val wrEna    = Input(Bool())
-    val rdEna    = Input(Bool())
+    val wrEna   = Input(Bool())
+    val rdEna   = Input(Bool())
   })
   val mem = SyncReadMem(memDepth, gen)
   when(io.wrEna) {
