@@ -34,7 +34,7 @@ object CPIMOMI{
   val prescaler                = 0x20
 }
 
-class CPIIO(p: CPIParams) extends Bundle{
+class CPIIO(val p: CPIParams) extends Bundle{
 
   val clock     = Input(Clock())
   val reset     = Input(Bool())
