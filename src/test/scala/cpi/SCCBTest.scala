@@ -33,12 +33,12 @@ class SCCBInterfaceTest(dut:SCCBInterface)(nOfRandomTest: Int) extends PeekPokeT
     //Inverse the output of SIOD, and SIOC
     while(peek(dut.io.sccbReady)==0){
 
-      var siocLow = (!int2bool(peek(dut.io.SIOC)))
+      var siocLow = !int2bool(peek(dut.io.SIOC))
       step(1)
-      var siocHigh = (!int2bool(peek(dut.io.SIOC)))
+      var siocHigh = !int2bool(peek(dut.io.SIOC))
 
       if(siocHigh-siocLow == 1){  //detect edge in SIOC
-        var SIOD = (!int2bool(peek(dut.io.SIOD)))
+        var SIOD = !int2bool(peek(dut.io.SIOD))
 
         if(phase == 0 && (dataBitIdx != (-1))){
           transmittedSlaveAddr(dataBitIdx) = SIOD.toInt
