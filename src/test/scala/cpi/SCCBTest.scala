@@ -4,19 +4,19 @@ import chisel3._
 import chisel3.iotesters._
 import org.scalatest._
 
-class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPokeTester(dut: SCCBInterface){
+class SCCBInterfaceTest(dut:SCCBInterface)(nOfRandomTest: Int) extends PeekPokeTester(dut: SCCBInterface){
 
   poke(dut.io.config,false)
   step(40)
 
-  val number_of_test=(n_of_random_test)
-  var number_of_tests_passed = 0
-  for ( n_test<- 0 until number_of_test){
-    val slave_addr=0x42
-    val control_addr = scala.util.Random.nextInt(255)
+  val numberOfTest = nOfRandomTest
+  var numberOfTestsPassed = 0
+  for (nTest<- 0 until numberOfTest){
+    val slaveAddr=0x42
+    val controlAddr = scala.util.Random.nextInt(255)
     val config_data  = scala.util.Random.nextInt(255)
-    poke(dut.io.control_address, control_addr)
-    poke(dut.io.config_data, config_data)
+    poke(dut.io.controlAddress, controlAddr)
+    poke(dut.io.configData, config_data)
     poke(dut.io.config, false)
 
     step(scala.util.Random.nextInt(10))
@@ -24,56 +24,55 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
     step(1)
     poke(dut.io.config,false)
     step(1)
-    var data_bit_idx = 7
-    val transmitted_slave_addr = Array.fill(8){0}
-    val transmitted_addr = Array.fill(8){0}
-    val transmitted_data = Array.fill(8){0}
+    var dataBitIdx = 7
+    val transmittedSlaveAddr = Array.fill(8){0}
+    val transmittedAddr = Array.fill(8){0}
+    val transmittedData = Array.fill(8){0}
     var phase = 0
 
     //Inverse the output of SIOD, and SIOC
-    while(peek(dut.io.sccb_ready)==0){
+    while(peek(dut.io.sccbReady)==0){
 
-      var c_low = (!int2bool(peek(dut.io.SIOC).toInt))
+      var siocLow = (!int2bool(peek(dut.io.SIOC).toInt))
       step(1)
-      var c_high = (!int2bool(peek(dut.io.SIOC).toInt))
+      var siocHigh = (!int2bool(peek(dut.io.SIOC).toInt))
 
-      if(c_high-c_low == 1){  //detect edge in SIOC
+      if(siocHigh-siocLow == 1){  //detect edge in SIOC
         var SIOD = (!int2bool(peek(dut.io.SIOD).toInt))
 
-        if(phase == 0 && (data_bit_idx != (-1))){
-          transmitted_slave_addr(data_bit_idx) = SIOD.toInt
+        if(phase == 0 && (dataBitIdx != (-1))){
+          transmittedSlaveAddr(dataBitIdx) = SIOD.toInt
         }
-        else if(phase == 1 && (data_bit_idx!=(-1))){
-          transmitted_addr(data_bit_idx) = SIOD.toInt
+        else if(phase == 1 && (dataBitIdx!=(-1))){
+          transmittedAddr(dataBitIdx) = SIOD.toInt
         }
-        else if(phase==2 && (data_bit_idx != (-1))){
-          transmitted_data(data_bit_idx) = SIOD.toInt
+        else if(phase==2 && (dataBitIdx != (-1))){
+          transmittedData(dataBitIdx) = SIOD.toInt
         }
-        data_bit_idx = data_bit_idx-1
+        dataBitIdx = dataBitIdx - 1
 
-        if(data_bit_idx == (-2)){
-          data_bit_idx = 7
-          phase = phase+1
+        if(dataBitIdx == (-2)){
+          dataBitIdx = 7
+          phase = phase + 1
         }
       }
     }
 
     step(50)
     // check for the number of tests passed
-    if(slave_addr == bin2dec(transmitted_slave_addr)){
-      if((control_addr == bin2dec(transmitted_addr)) && (config_data==bin2dec(transmitted_data))){
-        number_of_tests_passed = number_of_tests_passed+1
+    if(slaveAddr == bin2dec(transmittedSlaveAddr)){
+      if((controlAddr == bin2dec(transmittedAddr)) && (config_data==bin2dec(transmittedData))){
+        numberOfTestsPassed = numberOfTestsPassed+1
       }
     }
   }
-  Console.out.println(Console.YELLOW+"testing results of the SCCB interface are highlighted in blue")
-  Console.out.println(Console.BLUE+"test result: " +number_of_tests_passed.toString+
-    " tests passed over "+number_of_test.toString+" being tested"+Console.RESET)
+  Console.out.println(Console.YELLOW+"test result of SCCB interface: " + numberOfTestsPassed.toString+
+    " tests passed over "+numberOfTest.toString+" being tested"+Console.RESET)
 
   def bin2dec(in:Array[Int]): Int={
-    val array_length = in.length
+    val arrayLength = in.length
     var dec = 0
-    for(idx<-0 until array_length){
+    for(idx<-0 until arrayLength){
       dec = dec + in(idx) * scala.math.pow(2,idx).toInt
     }
     dec
@@ -89,24 +88,11 @@ class SCCBInterfaceTest(dut:SCCBInterface)(n_of_random_test: Int) extends PeekPo
   }
 }
 
-//class SCCB_interface_waveform extends FlatSpec with Matchers {
-//  "WaveformCounter" should "pass" in {
-//    Driver.execute(Array("--generate-vcd-output", "on"), () =>
-//      new SCCB_interface(50, 100.2 )) { c =>
-//      new SCCB_interface_test(c)(20)
-//    } should be (true)
-//  }
-//}
-object SCCBInterfaceTest extends App{
-  chisel3.iotesters.Driver(() => new SCCBInterface(50, 1000)){ c=>
-    new SCCBInterfaceTest(c)(50)
-  }
-}
 class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
     chisel3.iotesters.Driver (() => new SCCBInterface(
       50,1000)) { c =>
-      new SCCBInterfaceTest(c)(200)
+      new SCCBInterfaceTest(c)(40)
     } should be (true)
   }
 }

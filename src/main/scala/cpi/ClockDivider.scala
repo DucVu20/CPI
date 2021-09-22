@@ -5,42 +5,42 @@ import chisel3.util._
 
 class ClockDivider(maxPrescaler: Int) extends Module{
   val io = IO(new Bundle {
-    val clock_in      = Input(Clock())
-    val divided_clock = Output(Clock())
-    val reset         = Input(Bool())
-    val prescaler     = Input(UInt(log2Ceil(maxPrescaler).W))
+    val clockIn      = Input(Clock())
+    val dividedClock = Output(Clock())
+    val reset        = Input(Bool())
+    val prescaler    = Input(UInt(log2Ceil(maxPrescaler).W))
   })
-  val counter_width = io.prescaler.getWidth
+  val counterWidth = io.prescaler.getWidth
 
-  withClockAndReset(io.clock_in, io.reset){
+  withClockAndReset(io.clockIn, io.reset){
     val max           = io.prescaler>>1
-    val counter       = RegInit(0.U(counter_width.W))
-    val divided_clock = RegInit(false.B)
+    val counter       = RegInit(0.U(counterWidth.W))
+    val dividedClock  = RegInit(false.B)
 
     counter         := counter+1.U
     when(counter===(max.asUInt-1.U)){
-      divided_clock := (~divided_clock) // toggle
+      dividedClock  := (~dividedClock) // toggle
       counter       := 0.U
     }
     when(io.reset){
-      counter       := 0.U
-      divided_clock := false.B
+      counter      := 0.U
+      dividedClock := false.B
     }
-    io.divided_clock:= divided_clock.asClock()
+    io.dividedClock := dividedClock.asClock()
   }
 }
 
 class ClockDividerDemo(maxPrescaler:Int) extends Module{
   val io = IO(new Bundle {
-    val reset         = Input(Bool())
-    val divided_clock = Output(Clock())
-    val prescaler     = Input(UInt(log2Ceil(maxPrescaler).W))
+    val reset        = Input(Bool())
+    val dividedClock = Output(Clock())
+    val prescaler    = Input(UInt(log2Ceil(maxPrescaler).W))
   })
-  val clk_div=Module(new ClockDivider(maxPrescaler))
-  clk_div.io.clock_in :=clock
-  clk_div.io.reset    :=io.reset
-  clk_div.io.prescaler:=io.prescaler
-  io.divided_clock    :=clk_div.io.divided_clock
+  val clk_div = Module(new ClockDivider(maxPrescaler))
+  clk_div.io.clockIn   := clock
+  clk_div.io.reset     := io.reset
+  clk_div.io.prescaler := io.prescaler
+  io.dividedClock      := clk_div.io.dividedClock
 
-  println(clk_div.io.divided_clock.name)
+  println(clk_div.io.dividedClock.name)
 }

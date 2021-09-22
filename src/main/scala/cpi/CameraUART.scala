@@ -2,207 +2,226 @@ package sislab.cpi
 
 import chisel3._
 import chisel3.util._
+import chisel3.stage.ChiselStage
 
-object Types{
-  val configure_camera::capture_image::image_status::read_image::Nil=Enum(4)
-}
+case class params(
+                   systemFreqMHz: Float,
+                   sccbFreqHz: Int,
+                   imgWidth: Int,
+                   imgHeight: Int,
+                   bufferDepth: Int,
+                   baudRate: Int,
+                   test: Boolean= true
+                 )
 
-class CameraUartTop(CLK_FREQ_MHz: Int, SCCB_FREQ_kHz: Int,
-                    img_width: Int, img_height: Int,
-                    bufferDepth: Int,baudRate: Int) extends  Module {
-  val MHz=scala.math.pow(10,6)
-  // add modules
-  val frame_capture = Module(new CaptureModule(img_width, img_height,
-    2, bufferDepth))
-  val sccb_interface = Module(new SCCBInterface(CLK_FREQ_MHz, SCCB_FREQ_kHz))
-  val receiver = Module(new Rx_ver1((CLK_FREQ_MHz*MHz).toInt, baudRate))
-  val transmitter = Module(new Tx((CLK_FREQ_MHz*MHz).toInt, baudRate))
+class CameraUartTop(p: params) extends  Module {
+  val MHz    = scala.math.pow(10,6)
+  val width  = p.imgWidth
+  val height = p.imgHeight
+
+  var CPI = Module(new CaptureModule(p.imgWidth, p.imgHeight, 2, p.bufferDepth))
+  val sccbInterface = Module(new SCCBInterface((p.systemFreqMHz*MHz).toInt, p.sccbFreqHz))
+  val receiver      = Module(new Rx_ver1((p.systemFreqMHz*MHz).toInt, p.baudRate))
+  val transmitter   = Module(new Tx((p.systemFreqMHz*MHz).toInt, p.baudRate))
+  //dontTouch(CPI)
 
   val io = IO(new Bundle {
     val rx = Input(UInt(1.W))
     val tx = Output(UInt(1.W))
 
-    val p_clk=Input(Bool())
-    val href=Input(Bool())
-    val vsync=Input(Bool())
-    val pixel_in=Input(UInt(8.W))
+    val pclk     = Input(Bool())
+    val href     = Input(Bool())
+    val vsync    = Input(Bool())
+    val pixelIn = Input(UInt(8.W))
 
     val SIOC = Output(Bool())
     val SIOD = Output(UInt(1.W))
 
-    //delete later
-//    val valid=Output(Bool())
-//    val rx_bits=Output(UInt(8.W))
-//    val cpu_read_data=Output(UInt(8.W))
-//    val cpu_echo_valid=Output(Bool())
-//    val cpu_ready=Input(Bool())
+    //delete this part if implement on fpga
+    val valid         = if (p.test) Some(Output(Bool())) else None
+    val rxBits        = if (p.test) Some(Output(UInt(8.W))) else None
+    val cpuReadData   = if (p.test) Some(Output(UInt(8.W))) else None
+    val cpuEchoValid  = if (p.test) Some(Output(Bool())) else None
+    val cpuReady      = if (p.test) Some(Input(Bool())) else None
+
   })
   io.rx<>receiver.io.rxd
   io.tx<>transmitter.io.txd
-//  /// delete later
-//  io.valid<>receiver.io.valid
-//  io.rx_bits<>receiver.io.bits
-//
-//  val echo_cpu=Module(new Rx((CLK_FREQ_MHz*MHz).toInt, baudRate))
-//  echo_cpu.io.rxd<>transmitter.io.txd
-//  echo_cpu.io.channel.bits<>io.cpu_read_data
-//  echo_cpu.io.channel.valid<>io.cpu_echo_valid
-//  echo_cpu.io.channel.ready<>io.cpu_ready
-//  //delete later
+
+  if(p.test){
+    io.valid.get     <> receiver.io.valid
+    receiver.io.bits <> io.rxBits.get
+
+    val echo_cpu=Module(new Rx((p.systemFreqMHz*MHz).toInt, p.baudRate))
+    echo_cpu.io.rxd           <> transmitter.io.txd
+    echo_cpu.io.channel.bits  <> io.cpuReadData.get
+    echo_cpu.io.channel.valid <> io.cpuEchoValid.get
+    echo_cpu.io.channel.ready <> io.cpuReady.get
+  }
 
   val idle ::fetch :: Nil = Enum(2)
   val FMS = RegInit(idle)
-  val func_field = RegInit(0.U(8.W))
-  val addr_field = RegInit(0.U(8.W))
-  val data_field = RegInit(0.U(8.W))
-  val din_byte_counter = RegInit(0.U(2.W))
-  val data_processing_intruction = Cat(func_field, addr_field, data_field)
+  val funcField = RegInit(0.U(8.W))
+  val addrField = RegInit(0.U(8.W))
+  val dataField = RegInit(0.U(8.W))
+  val dinByteCounter           = RegInit(0.U(2.W))
+  val dataProcessingIntruction = Cat(funcField, addrField, dataField)
 
   //=============== FMS's control signals=================//
-  val config = WireInit(false.B)
-  val capture = WireInit(false.B)
-  val read_image=WireInit(false.B)
+  val config    = WireInit(false.B)
+  val capture   = WireInit(false.B)
+  val readImage = WireInit(false.B)
 
   // ==================load data to instruction register===============//
-  when(din_byte_counter === 3.U) {
-    din_byte_counter := 0.U
+  when(dinByteCounter === 3.U) {
+    dinByteCounter := 0.U
   }
   when(receiver.io.valid) {
-    din_byte_counter := din_byte_counter + 1.U
+    dinByteCounter := dinByteCounter + 1.U
 
-    switch(din_byte_counter) {
+    switch(dinByteCounter) {
       is(0.U) {
-        func_field := receiver.io.bits
+        funcField := receiver.io.bits
       }
       is(1.U) {
-        addr_field := receiver.io.bits
+        addrField := receiver.io.bits
       }
       is(2.U) {
-        data_field := receiver.io.bits
+        dataField := receiver.io.bits
       }
       is(3.U) {
-        func_field := receiver.io.bits
+        funcField := receiver.io.bits
       } // default if counter to 3
     }
   }
 
-  val tx_data=WireDefault(0.U(8.W))
-  val tx_valid=WireDefault(false.B)
-  val sccb_status=RegInit(false.B)
-  val tx_ready=WireDefault(false.B)
-  tx_ready:=transmitter.io.channel.ready
-  sccb_status:=sccb_interface.io.sccb_ready
+  val txData     = WireDefault(0.U(8.W))
+  val txValid    = WireDefault(false.B)
+  val sccbStatus = RegInit(false.B)
+  val txReady    = WireDefault(false.B)
+  txReady    := transmitter.io.channel.ready
+  sccbStatus := sccbInterface.io.sccbReady
   //==================master FMS========================//
   switch(FMS) {
     is(idle) {
-      when(din_byte_counter === 3.U) {
+      when(dinByteCounter === 3.U) {
         FMS := fetch // when data processing register is full, execute the instruction
       }
     }
     is(fetch) {
       //FMS := idle
-      switch(data_processing_intruction(18, 16)){
+      switch(dataProcessingIntruction(18, 16)){
         is(0.U){  // check sccb status
-          when(tx_ready){
-            tx_data:=sccb_status
-            FMS:=idle
-            tx_valid:=true.B
+          when(txReady){
+            txData  := sccbStatus
+            FMS     := idle
+            txValid := true.B
           }
 
         }
         is(1.U){  // generate a config signal
-          when(sccb_status){
-            config:=true.B
-            FMS:=idle
+          when(sccbStatus){
+            config := true.B
+            FMS    := idle
           }
         }
         is(2.U){  // capture
-          capture:=true.B
-          FMS:=idle
+          capture := true.B
+          FMS     := idle
         }
         is(3.U){  // check whether the camera is capturing image or not
-          when(tx_ready){
-            tx_data:=frame_capture.io.capturing
-            FMS:=idle
-            tx_valid:=true.B
+          when(txReady){
+            txData  := CPI.io.capturing
+            FMS     := idle
+            txValid := true.B
           }
         }
         is(4.U){  //check buffer status
-          when(tx_ready){
-            tx_valid:=true.B
-            tx_data:=frame_capture.io.frameFull
-            FMS:=idle
+          when(txReady){
+            txValid := true.B
+            txData  := CPI.io.frameFull
+            FMS     := idle
           }
         }
         is(5.U){  // read image
-          when(frame_capture.io.frameFull){
-            read_image:=true.B
-            FMS:=idle
+          when(CPI.io.frameFull){
+            readImage := true.B
+            FMS       := idle
           }
         }
       }
     }
   }
   // remember to taylor reading ports signals
-  val read_pixel=WireInit(false.B)
-  val byte_counter=RegInit(0.U(1.W))
-  val pixel=RegInit(0.U(16.W))
-  pixel:=Mux(read_pixel,frame_capture.io.pixelOut,pixel)
-  val pixel_byte=Mux(byte_counter===1.U,pixel(15,8),pixel(7,0))
-  Mux(read_pixel,frame_capture.io.pixelOut,pixel)    // load new pixel when read_pixel is inserted
-                                                        // and increase the address of the next pixel
 
-  val tx_idle::load_pixel:: transmit_to_cpu::waiting::Nil=Enum(4)
-  val tx_fms=RegInit(tx_idle)
-  switch(tx_fms){
+  val read         = WireInit(false.B)
+  val loadPixel    = WireInit(false.B)
+  val byte_counter = RegInit(0.U(1.W))
+  val pixel        = RegInit(0.U(16.W))
+  pixel := Mux(loadPixel, CPI.io.pixelOut, pixel)
+  val pixel_byte = Mux(byte_counter===1.U, pixel(7,0), pixel(15,8))
+
+  val fmsIdle::fmsReadPixel::fmsLoadPixel:: fmsTransmitToCpu::fmsTransmitting::Nil=Enum(5)
+  val txFms=RegInit(fmsIdle)
+  switch(txFms){
     is(idle){
-      when(read_image){
-        tx_fms:=load_pixel
+      when(readImage){
+        txFms := fmsReadPixel
       }
     }
-    is(load_pixel){
-      read_pixel:=true.B
-      tx_fms:=transmit_to_cpu
+    is(fmsReadPixel){
+      read  := true.B
+      txFms := fmsLoadPixel
     }
-    is(transmit_to_cpu){     // wait until one pixel is transmitted, move to load_pixel
+    is(fmsLoadPixel){
+      loadPixel := true.B
+      txFms     := fmsTransmitToCpu
+
+    }
+    is(fmsTransmitToCpu){     // wait until one pixel is transmitted, move to load_pixel
       when(transmitter.io.channel.ready){    // after this, ready goes low
-        tx_valid:=true.B
-        tx_data:=pixel_byte
-        tx_fms:=waiting
-        byte_counter:=byte_counter+1.U
+        txValid := true.B
+        txData  := pixel_byte
+        txFms   := fmsTransmitting
+        byte_counter := byte_counter + 1.U
       }
     }
-    is(waiting){
+    is(fmsTransmitting){
       when(transmitter.io.channel.ready){
-        tx_fms:=Mux(byte_counter.asBool,transmit_to_cpu,load_pixel)
+        txFms := Mux(byte_counter.asBool, fmsTransmitToCpu, fmsReadPixel)
       }
-      when(!frame_capture.io.frameFull){ // when empty, done reading
-        tx_fms:=idle
+      when(!CPI.io.frameFull){ // when empty, load the final pixel before
+        // returning back to idle state
+        txFms := Mux(byte_counter.asBool(), fmsTransmitToCpu, idle)
       }
     }
   }
 
   // sccb interface
-  sccb_interface.io.control_address:=addr_field
-  sccb_interface.io.config_data:=data_field
-  sccb_interface.io.config:=config
-  io.SIOC:=sccb_interface.io.SIOC
-  io.SIOD:=sccb_interface.io.SIOD
+  sccbInterface.io.controlAddress := addrField
+  sccbInterface.io.configData     := dataField
+  sccbInterface.io.config         := config
+  io.SIOC := sccbInterface.io.SIOC
+  io.SIOD := sccbInterface.io.SIOD
   // capture module
-  frame_capture.io.frameFull<>read_pixel
-  frame_capture.io.pclk<>io.p_clk
-  frame_capture.io.href<>io.href
-  frame_capture.io.vsync<>io.vsync
-  frame_capture.io.pixelIn<>io.pixel_in
-  frame_capture.io.capture:=capture
+  CPI.io.readFrame := read
+  CPI.io.pclk      := io.pclk
+  CPI.io.href      := io.href
+  CPI.io.vsync     := io.vsync
+  CPI.io.pixelIn   := io.pixelIn
+  CPI.io.capture   := capture
+  CPI.io.imageFormat := 1.U
+
+  val frameWidth = Wire(UInt(log2Ceil(p.imgWidth).W))
+  val frameHeight = Wire(UInt(log2Ceil(p.imgHeight).W))
+  frameWidth  := CPI.io.frameWidth
+  frameHeight := CPI.io.frameHeight
   // transmitter
-  transmitter.io.channel.valid:=tx_valid // default is false
-  transmitter.io.channel.bits:=tx_data
+  transmitter.io.channel.valid:=txValid // default is false
+  transmitter.io.channel.bits:=txData
 }
 
-// I suspose you should feed low frequency clock to the OV7670 first, 10MHz first, let's say.
-// CLK_FREQ and SCCB_FREQ are double type, so you can use
-object camera_top_v extends App {
-  chisel3.Driver.execute(Array[String](), () => new CameraUartTop(50,50,
-    640,480,640*480,115200))
+object CameraUartTop extends App{
+  new (ChiselStage).emitVerilog(new CameraUartTop(params.apply(50.toFloat,
+    50, 640, 480, 640*480, 115200, false)), Array("--target-dir","generated"))
 }
