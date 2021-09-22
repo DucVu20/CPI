@@ -33,12 +33,12 @@ class SCCBInterfaceTest(dut:SCCBInterface)(nOfRandomTest: Int) extends PeekPokeT
     //Inverse the output of SIOD, and SIOC
     while(peek(dut.io.sccbReady)==0){
 
-      var siocLow = (!int2bool(peek(dut.io.SIOC).toInt))
+      var siocLow = (!int2bool(peek(dut.io.SIOC)))
       step(1)
-      var siocHigh = (!int2bool(peek(dut.io.SIOC).toInt))
+      var siocHigh = (!int2bool(peek(dut.io.SIOC)))
 
       if(siocHigh-siocLow == 1){  //detect edge in SIOC
-        var SIOD = (!int2bool(peek(dut.io.SIOD).toInt))
+        var SIOD = (!int2bool(peek(dut.io.SIOD)))
 
         if(phase == 0 && (dataBitIdx != (-1))){
           transmittedSlaveAddr(dataBitIdx) = SIOD.toInt
@@ -69,7 +69,7 @@ class SCCBInterfaceTest(dut:SCCBInterface)(nOfRandomTest: Int) extends PeekPokeT
   Console.out.println(Console.YELLOW+"test result of SCCB interface: " + numberOfTestsPassed.toString+
     " tests passed over "+numberOfTest.toString+" being tested"+Console.RESET)
 
-  def bin2dec(in:Array[Int]): Int={
+  def bin2dec(in : Array[Int]): Int={
     val arrayLength = in.length
     var dec = 0
     for(idx<-0 until arrayLength){
@@ -78,7 +78,7 @@ class SCCBInterfaceTest(dut:SCCBInterface)(nOfRandomTest: Int) extends PeekPokeT
     dec
   }
 
-  def int2bool(int:Int): Boolean ={
+  def int2bool(int : BigInt): Boolean ={
     if(int==1){
       return true
     }
