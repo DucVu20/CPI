@@ -34,7 +34,7 @@ object CPIMOMI{
   val prescaler                = 0x20
 }
 
-class CPIIO(p: CPIParams) extends Bundle{
+class CPIIO(val p: CPIParams) extends Bundle{
 
   val clock     = Input(Clock())
   val reset     = Input(Bool())
@@ -59,14 +59,14 @@ class CPIIO(p: CPIParams) extends Bundle{
 
   val config         = Input(Bool())
   val sccbReady      = Output(Bool())
-  val SIOC           = Output(Bool())
+  val SIOC           = Output(UInt(1.W))
   val SIOD           = Output(UInt(1.W))
   val configData     = Input(UInt(8.W))
   val controlAddress = Input(UInt(8.W))
 }
 
 trait CPIPortIO extends Bundle{
-  val SIOC    = Output(Bool())
+  val SIOC    = Output(UInt(1.W))
   val SIOD    = Output(UInt(1.W))
   val pclk    = Input(Bool())
   val href    = Input(Bool())
@@ -111,7 +111,7 @@ class CPI(p: CPIParams) extends Module with HasCPIIO {
   XCLKGenerator.io.reset     := io.reset
 
   io.SIOC                    := SCCBInterface.io.SIOC
-  io.SIOD                    := SCCBInterface.io.SIOC
+  io.SIOD                    := SCCBInterface.io.SIOD
   io.sccbReady               := SCCBInterface.io.sccbReady
   SCCBInterface.io.config         := io.config
   SCCBInterface.io.configData     := io.configData
@@ -145,7 +145,7 @@ trait CPIModule extends HasRegMap{
   CPI.io.pixelIn := io.pixelIn
 
   io.SIOC := CPI.io.SIOC
-  io.SIOD := CPI.io.SIOC
+  io.SIOD := CPI.io.SIOD
 
   io.XCLK          := CPI.io.XCLK
   CPI.io.prescaler := prescaler
@@ -235,8 +235,8 @@ trait CanHavePeripheryCPIModuleImp extends LazyModuleImp {
   val port = outer.cpi match {
     case  Some(cpi) => {
       val cpiPort=IO(new Bundle{
-        val SIOC    = Output(Bool())
-        val SIOD    = Output(Bool())
+        val SIOC    = Output(UInt(1.W))
+        val SIOD    = Output(UInt(1.W))
         val vsync   = Input(Bool())
         val href    = Input(Bool())
         val pclk    = Input(Bool())
