@@ -9,16 +9,15 @@ import freechips.rocketchip.config.{Parameters, Field, Config}
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.regmapper.{HasRegMap, RegField}
 import freechips.rocketchip.tilelink._
-import freechips.rocketchip.util.UIntIsOneOf
-
+import freechips.rocketchip.util._
 
 case class CPIParams(
-                      address: BigInt        = 0x10003000,
+                      address: BigInt        = 0x5000,
                       useAXI4: Boolean       = false,
-                      imgWidth: Int          = 640,
-                      imgHeight: Int         = 480,
+                      imgWidth: Int          = 320,
+                      imgHeight: Int         = 240,
                       bytePerPixel: Int      = 2,
-                      bufferDepth: Int       = 640*480,
+                      bufferDepth: Int       = 320*240,
                       sccbFreqkHz: Int       = 100,
                       systemFreqMHz: Int     = 50,
                       maxPrescaler: Int      = 16
@@ -68,6 +67,15 @@ class CPIIO(val p: CPIParams) extends Bundle{
 trait CPIPortIO extends Bundle{
   val SIOC    = Output(UInt(1.W))
   val SIOD    = Output(UInt(1.W))
+  val pclk    = Input(Bool())
+  val href    = Input(Bool())
+  val vsync   = Input(Bool())
+  val pixelIn = Input(UInt(8.W))
+  val XCLK    = Output(Clock())
+}
+class CPI2IO extends Bundle{
+  val SIOC    = Output(Bool())
+  val SIOD    = Output(Bool())
   val pclk    = Input(Bool())
   val href    = Input(Bool())
   val vsync   = Input(Bool())
@@ -234,15 +242,7 @@ trait CanHavePeripheryCPIModuleImp extends LazyModuleImp {
   val outer: CanHavePeripheryCPI
   val port = outer.cpi match {
     case  Some(cpi) => {
-      val cpiPort=IO(new Bundle{
-        val SIOC    = Output(UInt(1.W))
-        val SIOD    = Output(UInt(1.W))
-        val vsync   = Input(Bool())
-        val href    = Input(Bool())
-        val pclk    = Input(Bool())
-        val pixelIn = Input(UInt(8.W))
-        val XCLK    = Output(Clock())
-      })
+      val cpiPort=IO(new CPI2IO)
 
       cpiPort.SIOC          := cpi.module.io.SIOC
       cpiPort.SIOD          := cpi.module.io.SIOD
@@ -253,7 +253,6 @@ trait CanHavePeripheryCPIModuleImp extends LazyModuleImp {
       cpiPort.XCLK          := cpi.module.io.XCLK
 
       Some(cpiPort)
-      dontTouch(cpiPort)  // FIRTRL wouldn't optimize or remove any components inside don't touch
     }
     case None => None
   }
