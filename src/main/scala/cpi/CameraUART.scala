@@ -213,7 +213,7 @@ class CameraUartTop(p: params) extends  Module {
   CPI.io.vsync     := io.vsync
   CPI.io.pixelIn   := io.pixelIn
   CPI.io.capture   := capture
-  CPI.io.grayImage := 1.U
+  CPI.io.grayImage := false.B
 
   val frameWidth = Wire(UInt(log2Ceil(p.imgWidth).W))
   val frameHeight = Wire(UInt(log2Ceil(p.imgHeight).W))
@@ -227,35 +227,4 @@ class CameraUartTop(p: params) extends  Module {
 object CameraUartTop extends App{
   new (ChiselStage).emitVerilog(new CameraUartTop(params.apply(50.toFloat,
     50, 320, 240, 320*240, 115200, false)), Array("--target-dir","generated"))
-}
-
-class demo extends Module{
-  val io=IO(new Bundle {
-    val x= Output(UInt(19.W))
-    val y=Input(UInt(4.W))
-  })
-  val x = RegInit(0.U(19.W))
-  val y = RegInit(0.U(10.W))
-  y := io.y
-  x := Cat(23.U,3.U)
-  io.x := x
-}
-
-class demoTest(dut: demo) extends PeekPokeTester(dut){
-  poke(dut.io.y,3)
-  step(20)
-  println("Value "+peek(dut.io.x).toInt.toHexString)
-  println(dut.io.x.getWidth.toString)
-}
-class SimpleSpec extends FlatSpec with Matchers {
-  "Tester" should "pass" in {
-    chisel3. iotesters .Driver (() => new demo ()) { c =>
-      new demoTest(c)
-    } should be (true)
-  }
-}
-
-object demo extends App{
-  new (ChiselStage).emitVerilog(new demo(),
-  Array("--target-dir","generated"))
 }

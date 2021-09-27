@@ -109,7 +109,7 @@ class UarCPITest extends FlatSpec with ChiselScalatestTester{
       for (row <- 0 until(height)){
         for (plkClock<- 0 until(2)){
           var pixelIn = new referenceFrame().pixelStream(idx, refFrame,
-            1, plkClock)
+            0, plkClock)
 
           dut.io.href.poke(true.B)
           dut.io.vsync.poke(false.B)
@@ -148,7 +148,7 @@ class UarCPITest extends FlatSpec with ChiselScalatestTester{
     for(a<- 0 until width*height){
       for(clk<- 0 until(2)){
 
-        var refVal = new referenceFrame().pixelStream(idx1, refFrame, 1, clk)
+        var refVal = new referenceFrame().pixelStream(idx1, refFrame, 0, clk)
         val pixel = getPixel
         if(pixel==refVal){
           n_test_passed = n_test_passed + 1
