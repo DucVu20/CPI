@@ -8,7 +8,7 @@
 #define CAM_MODE                        (CPI_BASE_ADDR + 0x8)
 #define CAM_CONFIG                      (CPI_BASE_ADDR + 0xC)
 #define IMAGE_FORMAT                    (CPI_BASE_ADDR + 0x14)
-
+// I missed the address 0x10 here, fix later
 #define RETURNED_IMAGE_RESOLUTION       (CPI_BASE_ADDR + 0x18)
 #define PIXEL                           (CPI_BASE_ADDR + 0x1C)
 #define PRESCALER                       (CPI_BASE_ADDR + 0x20)
