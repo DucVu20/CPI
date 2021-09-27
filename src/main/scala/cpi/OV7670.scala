@@ -216,7 +216,7 @@ case object CPIKey extends Field[Option[CPIParams]](None)
 trait CanHavePeripheryCPI {this : BaseSubsystem =>
   private val portName= "OV7670"
 
-  val cpi=p(CPIKey) match{
+  val cpi = p(CPIKey) match{
     case Some(params) => {
       if (params.useAXI4) {
         val cpi = LazyModule(new CPIAXI4(params, pbus.beatBytes)(p))

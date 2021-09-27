@@ -19,13 +19,16 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
     val pixelAddr    = Output(UInt(log2Ceil(bufferDepth).W))
     val frameWidth   = Output(UInt(log2Ceil(imgWidth).W))
     val frameHeight  = Output(UInt(log2Ceil(imgHeight).W))
-    val imageFormat  = Input(UInt(1.W))                // either RGB or gray
+    val grayImage    = Input(Bool())                // 0 for RGB 1 for gray
     val capture      = Input (Bool())
     val capturing    = Output(Bool())
     val readFrame    = Input (Bool()) // ready
-    val frameFull    = Output(Bool()) // valid
-
+    val frameFull    = Output(Bool())// valid
+//    val expectedWidth  = Input(UInt(log2Ceil(imgWidth).W))
+//    val expectedHeight = Input(UInt(log2Ceil(imgHeight).W))
   })
+
+
   val idle :: captureFrame :: Nil = Enum(2)
   val FMS = RegInit(idle)
 
@@ -53,6 +56,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   val pclkRisingEdge   = io.pclk & (!RegNext(io.pclk))
   val vsyncFallingEdge = (!io.vsync) & RegNext(io.vsync)
   val hrefFallingEdge  = (!io.href) & RegNext(io.href)
+  val hrefRisingEdge   = io.href & (!RegNext(io.href))
 
   //=====================READ ADDRESS GENERATOR==================//
   when(io.readFrame & (!bufferEmpty)) {
@@ -94,7 +98,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
       FMS       := Mux(io.vsync, idle, captureFrame)
 
       when(pclkRisingEdge && (io.href)) {
-        when(io.imageFormat===0.U){     //gray scale, 8 bit for 1 pixel
+        when(io.grayImage){     //gray scale, 8 bit for 1 pixel
           firstByte  := 0.U
           secondByte := io.pixelIn
           wrEnaWire  := pclkRisingEdge
@@ -133,9 +137,11 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
 
   //================GET IMAGE RESOLUTION BASED ON HREF, VSYNC ==================//
   when(hrefFallingEdge) {
+    bufferDepthCounter := writePtr
+  }
+  when(hrefRisingEdge){
     rowCnt := rowCnt + 1.U
     colCnt := 0.U
-    bufferDepthCounter := writePtr
   }
   when(vsyncFallingEdge) {
     rowCnt := 0.U

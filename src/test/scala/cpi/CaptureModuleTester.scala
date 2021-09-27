@@ -7,7 +7,7 @@ import chiseltest._
 class referenceFrame{
 
   def generateRandomFrame(ImageResolution:Int, ImageFormat: Int): Array[Int]={
-    if(ImageFormat == 0){
+    if(ImageFormat == 1){ // gray
       val refFrame = Array.fill(ImageResolution){scala.util.Random.nextInt(255)}
       return refFrame
     }
@@ -20,7 +20,7 @@ class referenceFrame{
   def pixelStream(idx:Int,refFrame: Array[Int],
                   ImageFormat:Int,
                   pclk: Int): Int ={
-    if(ImageFormat==0){
+    if(ImageFormat==1){
       return refFrame(idx)
     }
     else {
@@ -54,9 +54,9 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
     val tp = 2 * pclock
     val t_line = 2 * pclock
     //====================synthesized timing========================//
-
+    println(" Capture frame with the resolution of "+width+"x"+height)
     for (imageFormat <- 0 until(2)) {
-      dut.io.imageFormat.poke(imageFormat.U)
+      dut.io.grayImage.poke(imageFormat.asUInt().asBool())
       println("generate a random frame")
       val refFrame = new referenceFrame().generateRandomFrame(height * width, imageFormat)
 
@@ -73,13 +73,13 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       dut.io.href.poke(false.B)
       dut.clock.step(t_line)
 
-      println("begin generating signals for format"+ (if(imageFormat==0) " Gray" else " RGB"))
+      println("begin generating signals for format"+ (if(imageFormat==0) " RGB" else " Gray"))
       var idx = 0
       var pclk = true
-      for (col <- 0 until(width)){
+      for (col <- 0 until(height)){
         dut.io.href.poke(true.B)
-        for (row <- 0 until(height)){
-          for (plkClock<- 0 until(imageFormat+1)){
+        for (row <- 0 until(width)){
+          for (plkClock<- 0 until( if(imageFormat==0) 2 else 1)){
             var pixelIn = new referenceFrame().pixelStream(idx, refFrame,
               imageFormat, plkClock)
 
@@ -121,6 +121,8 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
           nTestPassed += 1
         }
       }
+      println("width: "+dut.io.frameWidth.peek.litValue().toInt+
+        " height: "+dut.io.frameHeight.peek.litValue().toInt)
 
       dut.io.readFrame.poke(false.B)
       dut.clock.step(50)
@@ -131,7 +133,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
   }
 
   it should "pass" in {
-    test(new CaptureModule(60, 50, 2, 60*52))
+    test(new CaptureModule(120, 80, 2, 160*180))
     { dut => CaptureModuleTest(dut,4)}
   }
 }
