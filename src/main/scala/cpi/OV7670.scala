@@ -12,25 +12,25 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util._
 
 case class CPIParams(
-                      address: BigInt        = 0x5000,
+                      address: BigInt        = 0x10020000,
                       useAXI4: Boolean       = false,
-                      imgWidth: Int          = 320,
-                      imgHeight: Int         = 240,
+                      imgWidth: Int          = 352,
+                      imgHeight: Int         = 288,
                       bytePerPixel: Int      = 2,
-                      bufferDepth: Int       = 320*240,
-                      sccbFreqkHz: Int       = 100,
+                      bufferDepth: Int       = 352*288,
+                      sccbFreqkHz: Int       = 50,
                       systemFreqMHz: Int     = 50,
-                      maxPrescaler: Int      = 16
+                      maxPrescaler: Int      = 32
                     )
-object CPIMOMI{
-  val camStatus                = 0x00
+object CPIMMIO{
+  val interfaceStatus          = 0x00
   val camCapture               = 0x04
   val camMode                  = 0x08
-  val camConfig                = 0x0C
-  val imageFormat              = 0x14
-  val returnedImageResolution  = 0x18
-  val pixel                    = 0x1C
-  val prescaler                = 0x20
+  val imageFormat              = 0x0C
+  val returnedImageResolution  = 0x10
+  val pixel                    = 0x14
+  val pixelAddr                = 0x18
+  val prescaler                = 0x1C
 }
 
 class CPIIO(val p: CPIParams) extends Bundle{
@@ -45,7 +45,7 @@ class CPIIO(val p: CPIParams) extends Bundle{
   val vsync        = Input(Bool())
   val pixelIn      = Input(UInt(8.W))
 
-  val imageFormat  = Input(UInt(1.W))
+  val grayImage    = Input(Bool())
   val capture      = Input(Bool())
   val readFrame    = Input(Bool()) // ready
 
@@ -58,15 +58,15 @@ class CPIIO(val p: CPIParams) extends Bundle{
 
   val config         = Input(Bool())
   val sccbReady      = Output(Bool())
-  val SIOC           = Output(UInt(1.W))
-  val SIOD           = Output(UInt(1.W))
+  val SIOC           = Output(Bool())
+  val SIOD           = Output(Bool())
   val configData     = Input(UInt(8.W))
   val controlAddress = Input(UInt(8.W))
 }
 
 trait CPIPortIO extends Bundle{
-  val SIOC    = Output(UInt(1.W))
-  val SIOD    = Output(UInt(1.W))
+  val SIOC    = Output(Bool())
+  val SIOD    = Output(Bool())
   val pclk    = Input(Bool())
   val href    = Input(Bool())
   val vsync   = Input(Bool())
@@ -80,12 +80,12 @@ class CPI2IO extends Bundle{
   val href    = Input(Bool())
   val vsync   = Input(Bool())
   val pixelIn = Input(UInt(8.W))
-  val XCLK    = Output(Clock())
+  val XCLK    = Output(Bool())
 }
 
-class CPIInterrupts extends Bundle{
-  val newFrame = Bool()
-}
+//class CPIInterrupts extends Bundle{
+//  val newFrame = Bool()
+//}
 
 trait HasCPIIO extends BaseModule{
   val io = IO(new CPIIO(CPIParams.apply()))
@@ -104,7 +104,7 @@ class CPI(p: CPIParams) extends Module with HasCPIIO {
   captureModule.io.pixelIn     := io.pixelIn
   captureModule.io.capture     := io.capture
   captureModule.io.readFrame   := io.readFrame  // to read a frame, read frame signal must be high
-  captureModule.io.imageFormat := io.imageFormat
+  captureModule.io.grayImage   := io.grayImage
 
   io.pixelOut    := captureModule.io.pixelOut
   io.pixelAddr   := captureModule.io.pixelAddr
@@ -134,15 +134,15 @@ trait CPIModule extends HasRegMap{
 
   val pixel = Wire(new DecoupledIO(UInt((params.bytePerPixel*8).W)))
   val CPI   = Module(new CPI(params))
+  val imgWidthImgHeightLen = log2Ceil(params.imgWidth)+log2Ceil(params.imgHeight)
 
   val status             = Wire(UInt(3.W))
   val captureFrame       = WireInit(false.B)
-  val config             = WireInit(false.B)
-  val cameraMode         = WireInit(0.U(16.W))
-  val pixelAddr          = Wire(UInt(16.W))
-  val returnedResolution = Wire(UInt(19.W))
-  val prescaler          = WireInit(0.U(log2Ceil(params.maxPrescaler).W))
-  val imageFormat        = WireInit(0.U(1.W))
+  val cameraMode         = Wire(DecoupledIO(UInt(16.W)))
+  val pixelAddr          = Wire(UInt(CPI.io.pixelAddr.getWidth.W))
+  val returnedResolution = Wire(UInt(imgWidthImgHeightLen.W))
+  val prescaler          = Reg(UInt(log2Ceil(params.maxPrescaler).W))
+  val imageFormat        = Reg(UInt(1.W))
 
   CPI.io.clock := clock
   CPI.io.reset := reset.asBool
@@ -158,39 +158,43 @@ trait CPIModule extends HasRegMap{
   io.XCLK          := CPI.io.XCLK
   CPI.io.prescaler := prescaler
 
-  CPI.io.controlAddress := cameraMode(15,8)
-  CPI.io.configData     := cameraMode(7,0)
-  CPI.io.capture        := captureFrame
-  CPI.io.config         := config
+  CPI.io.controlAddress := cameraMode.bits(15,8)
+  CPI.io.configData     := cameraMode.bits(7,0)
+  CPI.io.config         := cameraMode.valid
+  cameraMode.ready      := CPI.io.sccbReady
 
-  CPI.io.imageFormat := imageFormat
+  CPI.io.capture        := captureFrame
+
+  CPI.io.grayImage   := imageFormat
   pixel.bits         := CPI.io.pixelOut
   pixel.valid        := CPI.io.frameFull
+  CPI.io.readFrame   := pixel.ready
   pixelAddr          := CPI.io.pixelAddr
+
 
   status := Cat(CPI.io.sccbReady, CPI.io.frameFull, CPI.io.capturing)
 
-  CPI.io.readFrame   := pixel.ready
   returnedResolution := Cat(CPI.io.frameWidth,CPI.io.frameHeight)
 
   regmap(
-    CPIMOMI.camStatus -> Seq(
+    CPIMMIO.interfaceStatus -> Seq(
       RegField.r(3,status)),
-    CPIMOMI.camCapture -> Seq(
+    CPIMMIO.camCapture -> Seq(
       RegField.w(1,captureFrame)),
-    CPIMOMI.camMode -> Seq(
+    CPIMMIO.camMode -> Seq(
       RegField.w(16,cameraMode)),
-    CPIMOMI.camConfig -> Seq(
-      RegField.w(1,config)),
-    CPIMOMI.imageFormat -> Seq(
+    CPIMMIO.imageFormat -> Seq(
       RegField.w(1,imageFormat)
     ),
-    CPIMOMI.returnedImageResolution -> Seq(
-      RegField.r(19,returnedResolution)
+    CPIMMIO.returnedImageResolution -> Seq(
+      RegField.r(imgWidthImgHeightLen,returnedResolution)
     ),
-    CPIMOMI.pixel -> Seq(
+    CPIMMIO.pixel -> Seq(
       RegField.r(16,pixel)),
-    CPIMOMI.prescaler -> Seq(
+    CPIMMIO.pixelAddr -> Seq(
+      RegField.r(CPI.io.pixelAddr.getWidth, pixelAddr)
+    ),
+    CPIMMIO.prescaler -> Seq(
       RegField.w(log2Ceil(params.maxPrescaler),prescaler)
     )
   )
@@ -216,7 +220,7 @@ case object CPIKey extends Field[Option[CPIParams]](None)
 trait CanHavePeripheryCPI {this : BaseSubsystem =>
   private val portName= "OV7670"
 
-  val cpi = p(CPIKey) match{
+  val cpi=p(CPIKey) match{
     case Some(params) => {
       if (params.useAXI4) {
         val cpi = LazyModule(new CPIAXI4(params, pbus.beatBytes)(p))
@@ -250,9 +254,10 @@ trait CanHavePeripheryCPIModuleImp extends LazyModuleImp {
       cpi.module.io.href    := cpiPort.href
       cpi.module.io.pclk    := cpiPort.pclk
       cpi.module.io.pixelIn := cpiPort.pixelIn
-      cpiPort.XCLK          := cpi.module.io.XCLK
+      cpiPort.XCLK          := cpi.module.io.XCLK.asBool
 
       Some(cpiPort)
+     // dontTouch(cpiPort)
     }
     case None => None
   }
