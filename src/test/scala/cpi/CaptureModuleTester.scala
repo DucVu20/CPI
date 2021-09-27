@@ -135,15 +135,15 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       Console.RESET)
   }
 
-//  it should "pass" in {
-//    test(new CaptureModule(120, 80, 2, 160*180))
-//    { dut => CaptureModuleTest(dut,8)}
-//  }
-
-  "CaptureModule" should "pass" in{
-    test(new CaptureModule(40,20,
-      2,120*80)).withAnnotations(Seq(WriteVcdAnnotation)){
-      dut => CaptureModuleTest(dut, 8)
-    }
+  it should "pass" in {
+    test(new CaptureModule(120, 80, 2, 160*180))
+    { dut => CaptureModuleTest(dut,8)}
   }
+
+//  "CaptureModule" should "pass" in{
+//    test(new CaptureModule(40,20,
+//      2,120*80)).withAnnotations(Seq(WriteVcdAnnotation)){
+//      dut => CaptureModuleTest(dut, 8)
+//    }
+//  }
 }

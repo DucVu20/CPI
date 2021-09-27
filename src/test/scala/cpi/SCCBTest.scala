@@ -3,6 +3,7 @@ package sislab.cpi
 import chisel3._
 import chisel3.iotesters._
 import org.scalatest._
+import chisel3.iotesters.Driver
 
 class SCCBInterfaceTest(dut:SCCBInterface)(nOfRandomTest: Int) extends PeekPokeTester(dut: SCCBInterface){
 
@@ -92,7 +93,16 @@ class SCCBInterfaceSpec extends FlatSpec with Matchers {
   "SCCB Interface" should "pass" in {
     chisel3.iotesters.Driver (() => new SCCBInterface(
       50,1000)) { c =>
-      new SCCBInterfaceTest(c)(40)
+      new SCCBInterfaceTest(c)(30)
+    } should be (true)
+  }
+}
+
+class SCCBWaveformSpec extends FlatSpec with Matchers {
+  "WaveformCounter" should "pass" in {
+    Driver.execute(Array("--generate-vcd-output", "on"), () =>
+      new SCCBInterface(50, 100)) { c =>
+      new SCCBInterfaceTest (c)(3)
     } should be (true)
   }
 }
