@@ -27,6 +27,7 @@ void configure_camera(unsigned int addr, unsigned int config_data){
     reg_write16(CAM_MODE, mode)   ;   // write configuration to the camera
     reg_write8(CAM_CONFIG, 1)    ;    // write one to force the camera to
                                      // work at the predefined mode
+    reg_write8(CAM_CONFIG, 0)   ;
     printf("Configuration mode transmitted\n");
 }
 void capture_image() {
