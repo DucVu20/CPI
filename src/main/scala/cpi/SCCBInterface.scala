@@ -27,7 +27,7 @@ class SCCBInterface(CLK_FREQ_MHz: Int, SCCB_FREQ_KHz: Int) extends Module{
   val latchedAddr    = RegInit(0.U(8.W))
   val latchedData    = RegInit(0.U(8.W))
 
-  val sccbTimer      = RegInit(0.U(32.W))
+  val sccbTimer      = RegInit(0.U(16.W))
   val txByte         = RegInit(0.U(8.W))
   val byteIndex      = RegInit(0.U(4.W))
   val byteCounter    = RegInit(0.U(2.W))
