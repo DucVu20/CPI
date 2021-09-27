@@ -4,6 +4,9 @@ import chisel3._
 import org.scalatest._
 import chiseltest._
 
+import chiseltest.internal.WriteVcdAnnotation
+import chiseltest.experimental.TestOptionBuilder._
+
 class referenceFrame{
 
   def generateRandomFrame(ImageResolution:Int, ImageFormat: Int): Array[Int]={
@@ -132,8 +135,15 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       Console.RESET)
   }
 
-  it should "pass" in {
-    test(new CaptureModule(120, 80, 2, 160*180))
-    { dut => CaptureModuleTest(dut,4)}
+//  it should "pass" in {
+//    test(new CaptureModule(120, 80, 2, 160*180))
+//    { dut => CaptureModuleTest(dut,8)}
+//  }
+
+  "CaptureModule" should "pass" in{
+    test(new CaptureModule(40,20,
+      2,120*80)).withAnnotations(Seq(WriteVcdAnnotation)){
+      dut => CaptureModuleTest(dut, 8)
+    }
   }
 }
