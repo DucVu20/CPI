@@ -5,7 +5,7 @@ import chisel3.util._
 
 class CaptureModule(imgWidth: Int, imgHeight: Int,
                     bytePerPixel: Int,
-                    bufferDepth: Int )  extends Module {
+                    bufferDepth: Int)  extends Module {
   val w = imgWidth
   val h = imgHeight
   val pixelBits = 8*bytePerPixel
@@ -24,10 +24,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
     val capturing    = Output(Bool())
     val readFrame    = Input (Bool()) // ready
     val frameFull    = Output(Bool())// valid
-//    val expectedWidth  = Input(UInt(log2Ceil(imgWidth).W))
-//    val expectedHeight = Input(UInt(log2Ceil(imgHeight).W))
   })
-
 
   val idle :: captureFrame :: Nil = Enum(2)
   val FMS = RegInit(idle)
@@ -97,7 +94,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
       frameFull := Mux(io.vsync, true.B, false.B)
       FMS       := Mux(io.vsync, idle, captureFrame)
 
-      when(pclkRisingEdge && (io.href)) {
+      when(pclkRisingEdge && io.href) {
         when(io.grayImage){     //gray scale, 8 bit for 1 pixel
           firstByte  := 0.U
           secondByte := io.pixelIn
@@ -134,6 +131,7 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   io.pixelAddr    := RegNext(readPtr)
   io.pixelOut     := buffer.io.dataOut
   io.frameFull    := frameFull
+
 
   //================GET IMAGE RESOLUTION BASED ON HREF, VSYNC ==================//
   when(hrefFallingEdge) {
