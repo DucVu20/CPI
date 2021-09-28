@@ -81,6 +81,8 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
             FMS                 := captureFrame
             captureSignalHolder := false.B
             frameFull           := false.B
+            rowCnt              := 0.U
+            colCnt              := 0.U   // reset counters
           }
         }
       }
@@ -88,6 +90,7 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
       capturing := false.B
     }
     is(captureFrame) {
+
       bufferEmpty := false.B
       capturing := true.B
       frameFull := Mux(io.vsync, true.B, false.B)
@@ -115,6 +118,13 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
           }
         }
       }
+      when(hrefRisingEdge){
+        rowCnt := rowCnt + 1.U
+        colCnt := 0.U
+      }
+      when(hrefFallingEdge) {
+        bufferDepthCounter := writePtr
+      }
     }
   }
   //=======================connect signals to the buffer========================//
@@ -131,17 +141,4 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
   io.pixelOut     := buffer.io.dataOut
   io.frameFull    := frameFull
 
-
-  //================GET IMAGE RESOLUTION BASED ON HREF, VSYNC ==================//
-  when(hrefFallingEdge) {
-    bufferDepthCounter := writePtr
-  }
-  when(hrefRisingEdge){
-    rowCnt := rowCnt + 1.U
-    colCnt := 0.U
-  }
-  when(vsyncFallingEdge) {
-    rowCnt := 0.U
-    colCnt := 0.U
-  }
 }

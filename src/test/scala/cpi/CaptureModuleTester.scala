@@ -66,7 +66,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       dut.io.href.poke(false.B)
       dut.clock.step(10)
       dut.io.capture.poke(true.B)
-      dut.clock.step(2)
+      dut.clock.step(1)
       dut.io.capture.poke(false.B)
       dut.io.vsync.poke(true.B)
       dut.io.href.poke(false.B)
@@ -102,12 +102,28 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
         dut.io.href.poke(false.B)
         dut.clock.step(2*tp)
       }
+
       dut.clock.step(tp)
       dut.io.vsync.poke(true.B)
-      dut.clock.step(tp)
+      dut.clock.step(100)
+      dut.io.vsync.poke(false.B)
+      dut.clock.step(100)
+      for(a<-0 until 5){
+        dut.io.href.poke(true.B)
+        dut.clock.step(50)
+        dut.io.href.poke(false.B)
+        dut.clock.step(50)
+      }
+      dut.io.vsync.poke(true.B)
+      dut.clock.step(100)
+      dut.io.vsync.poke(false.B)
+      dut.clock.step(50)
+      //========================////
 
       //====================validation=======================//
       println("begin to validate captured frame")
+      while(!dut.io.frameFull.peek.litToBoolean)
+        println("buffer is full")
 
       dut.clock.setTimeout(imgWidth*imgHeight*(imageFormat + 1) + 50)
       // this must be inserted if no input signals are changed for more than 1000 cycles
@@ -140,9 +156,9 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
 //  }
 
   "CaptureModule" should "pass" in{
-    test(new CaptureModule(648,480,
+    test(new CaptureModule(640,480,
       2,176*144)).withAnnotations(Seq(WriteVcdAnnotation)){
-      dut => CaptureModuleTest(dut, 2, 176,144)
+      dut => CaptureModuleTest(dut, 2, 40,20)
     }
   }
 }
