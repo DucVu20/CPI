@@ -39,8 +39,8 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
   val frameFull           = RegInit(false.B)
   val pixelIndex          = RegInit(0.U(log2Ceil(bytePerPixel).W))
-  val rowCnt              = RegInit(0.U(log2Ceil(640).W))
-  val colCnt              = RegInit(0.U(log2Ceil(480).W))
+  val rowCnt              = RegInit(0.U(log2Ceil(480).W))
+  val colCnt              = RegInit(0.U(log2Ceil(640).W))
   val bufferEmpty         = RegInit(true.B)
 
   val bufferAddr = WireInit(0.U(log2Ceil(bufferDepth).W))
