@@ -14,8 +14,8 @@ import freechips.rocketchip.util._
 case class CPIParams(
                       address: BigInt        = 0x10020000,
                       useAXI4: Boolean       = false,
-                      imgWidth: Int          = 352,
-                      imgHeight: Int         = 288,
+                      imgWidthCnt: Int       = 640,
+                      imgHeightCnt: Int      = 480,
                       bytePerPixel: Int      = 2,
                       bufferDepth: Int       = 352*288,
                       sccbFreqkHz: Int       = 50,
@@ -26,7 +26,7 @@ object CPIMMIO{
   val interfaceStatus          = 0x00
   val camCapture               = 0x04
   val camMode                  = 0x08
-  val imageFormat              = 0x0C
+  val grayImage                = 0x0C
   val returnImgWidth           = 0x10
   val returnImgHeight          = 0x14
   val pixel                    = 0x18
@@ -52,8 +52,8 @@ class CPIIO(val p: CPIParams) extends Bundle{
 
   val pixelOut     = Output(UInt((8*p.bytePerPixel).W))
   val pixelAddr    = Output(UInt(log2Ceil(p.bufferDepth).W))
-  val frameWidth   = Output(UInt(log2Ceil(p.imgWidth).W))
-  val frameHeight  = Output(UInt(log2Ceil(p.imgHeight).W))
+  val frameWidth   = Output(UInt(log2Ceil(p.imgWidthCnt).W))
+  val frameHeight  = Output(UInt(log2Ceil(p.imgHeightCnt).W))
   val capturing    = Output(Bool())
   val frameFull    = Output(Bool()) // valid
 
@@ -94,7 +94,7 @@ trait HasCPIIO extends BaseModule{
 
 class CPI(p: CPIParams) extends Module with HasCPIIO {
 
-  val captureModule = Module(new CaptureModule(p.imgWidth, p.imgHeight,
+  val captureModule = Module(new CaptureModule(p.imgWidthCnt, p.imgHeightCnt,
     p.bytePerPixel, p.bufferDepth))
   val SCCBInterface = Module(new SCCBInterface(p.systemFreqMHz, p.sccbFreqkHz))
   val XCLKGenerator = Module(new ClockDivider(p.maxPrescaler))
@@ -141,7 +141,7 @@ trait CPIModule extends HasRegMap{
   val cameraMode         = Wire(DecoupledIO(UInt(16.W)))
   val pixelAddr          = Wire(UInt(CPI.io.pixelAddr.getWidth.W))
   val prescaler          = Reg(UInt(log2Ceil(params.maxPrescaler).W))
-  val imageFormat        = Reg(UInt(1.W))
+  val grayImage          = Reg(UInt(1.W))
 
   CPI.io.clock := clock
   CPI.io.reset := reset.asBool
@@ -164,7 +164,7 @@ trait CPIModule extends HasRegMap{
 
   CPI.io.capture        := captureFrame
 
-  CPI.io.grayImage   := imageFormat
+  CPI.io.grayImage   := grayImage
   pixel.bits         := CPI.io.pixelOut
   pixel.valid        := CPI.io.frameFull
   CPI.io.readFrame   := pixel.ready
@@ -181,8 +181,8 @@ trait CPIModule extends HasRegMap{
       RegField.w(1,captureFrame)),
     CPIMMIO.camMode -> Seq(
       RegField.w(16,cameraMode)),
-    CPIMMIO.imageFormat -> Seq(
-      RegField.w(1,imageFormat)
+    CPIMMIO.grayImage -> Seq(
+      RegField.w(1,grayImage)
     ),
     CPIMMIO.returnImgWidth -> Seq(
       RegField.r(CPI.io.frameWidth.getWidth,CPI.io.frameWidth)

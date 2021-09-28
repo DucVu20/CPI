@@ -47,21 +47,20 @@ class referenceFrame{
 class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
   behavior of "Capture module"
 
-  def CaptureModuleTest[T <: CaptureModule](dut: T, n :Int)={
+  def CaptureModuleTest[T <: CaptureModule](dut: T, n :Int, imgWidth:Int, imgHeight:Int)={
 
-    val width = dut.w
-    val height = dut.h
+
     val pclock = n
     var nTestPassed = 0
 
     val tp = 2 * pclock
     val t_line = 2 * pclock
     //====================synthesized timing========================//
-    println(" Capture frame with the resolution of "+width+"x"+height)
+    println(" Capture frame with the resolution of "+imgWidth+"x"+imgHeight)
     for (imageFormat <- 0 until(2)) {
       dut.io.grayImage.poke(imageFormat.asUInt().asBool())
       println("generate a random frame")
-      val refFrame = new referenceFrame().generateRandomFrame(height * width, imageFormat)
+      val refFrame = new referenceFrame().generateRandomFrame(imgWidth * imgHeight, imageFormat)
 
       dut.io.vsync.poke(false.B)
       dut.io.href.poke(false.B)
@@ -79,9 +78,9 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       println("begin generating signals for format"+ (if(imageFormat==0) " RGB" else " Gray"))
       var idx = 0
       var pclk = true
-      for (col <- 0 until(height)){
+      for (col <- 0 until(imgHeight)){
         dut.io.href.poke(true.B)
-        for (row <- 0 until(width)){
+        for (row <- 0 until(imgWidth)){
           for (plkClock<- 0 until( if(imageFormat==0) 2 else 1)){
             var pixelIn = new referenceFrame().pixelStream(idx, refFrame,
               imageFormat, plkClock)
@@ -110,7 +109,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
       //====================validation=======================//
       println("begin to validate captured frame")
 
-      dut.clock.setTimeout(width*height*(imageFormat + 1) + 50)
+      dut.clock.setTimeout(imgWidth*imgHeight*(imageFormat + 1) + 50)
       // this must be inserted if no input signals are changed for more than 1000 cycles
       // read all data from the buffer requires the number of cycles equal to the buffer's depth
 
@@ -124,26 +123,26 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
           nTestPassed += 1
         }
       }
-      println("width: "+dut.io.frameWidth.peek.litValue().toInt+
-        " height: "+dut.io.frameHeight.peek.litValue().toInt)
+      println("colCnt returns: "+dut.io.frameWidth.peek.litValue().toInt+" frameWidth.getWidth "+dut.io.frameWidth.getWidth+
+        " rowCnt: "+dut.io.frameHeight.peek.litValue().toInt +" frameHeight.getWidth "+dut.io.frameHeight.getWidth)
 
       dut.io.readFrame.poke(false.B)
       dut.clock.step(50)
     }
     Console.out.println(Console.YELLOW+"CPI testing result: "+nTestPassed+
-      " tests passed over "+ Console.YELLOW+width*height*2+ " being tested"+
+      " tests passed over "+ Console.YELLOW+imgWidth*imgHeight*2+ " being tested"+
       Console.RESET)
   }
 
-  it should "pass" in {
-    test(new CaptureModule(120, 80, 2, 160*180))
-    { dut => CaptureModuleTest(dut,8)}
-  }
-
-//  "CaptureModule" should "pass" in{
-//    test(new CaptureModule(40,20,
-//      2,120*80)).withAnnotations(Seq(WriteVcdAnnotation)){
-//      dut => CaptureModuleTest(dut, 8)
-//    }
+//  it should "pass" in {
+//    test(new CaptureModule(64, 48, 2, 160*180))
+//    { dut => CaptureModuleTest(dut,8)}
 //  }
+
+  "CaptureModule" should "pass" in{
+    test(new CaptureModule(648,480,
+      2,176*144)).withAnnotations(Seq(WriteVcdAnnotation)){
+      dut => CaptureModuleTest(dut, 2, 176,144)
+    }
+  }
 }

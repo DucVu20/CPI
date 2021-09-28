@@ -3,11 +3,10 @@ package sislab.cpi
 import chisel3._
 import chisel3.util._
 
-class CaptureModule(imgWidth: Int, imgHeight: Int,
+class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
                     bytePerPixel: Int,
                     bufferDepth: Int)  extends Module {
-  val w = imgWidth
-  val h = imgHeight
+
   val pixelBits = 8*bytePerPixel
 
   val io  = IO(new Bundle {
@@ -17,8 +16,8 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
     val pixelIn      = Input (UInt(8.W))
     val pixelOut     = Output(UInt(pixelBits.W))
     val pixelAddr    = Output(UInt(log2Ceil(bufferDepth).W))
-    val frameWidth   = Output(UInt(log2Ceil(640).W))
-    val frameHeight  = Output(UInt(log2Ceil(480).W))
+    val frameWidth   = Output(UInt(log2Ceil(imgWidthCnt).W))
+    val frameHeight  = Output(UInt(log2Ceil(imgHeightCnt).W))
     val grayImage    = Input(Bool())                // 0 for RGB 1 for gray
     val capture      = Input (Bool())
     val capturing    = Output(Bool())
@@ -39,8 +38,8 @@ class CaptureModule(imgWidth: Int, imgHeight: Int,
   val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
   val frameFull           = RegInit(false.B)
   val pixelIndex          = RegInit(0.U(log2Ceil(bytePerPixel).W))
-  val rowCnt              = RegInit(0.U(log2Ceil(480).W))
-  val colCnt              = RegInit(0.U(log2Ceil(640).W))
+  val rowCnt              = RegInit(0.U(log2Ceil(imgHeightCnt).W))
+  val colCnt              = RegInit(0.U(log2Ceil(imgWidthCnt).W))
   val bufferEmpty         = RegInit(true.B)
 
   val bufferAddr = WireInit(0.U(log2Ceil(bufferDepth).W))
