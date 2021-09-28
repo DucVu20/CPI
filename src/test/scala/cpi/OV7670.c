@@ -8,10 +8,11 @@
 #define CAM_MODE                        (CPI_BASE_ADDR + 0x8)
 #define GRAY_IMAGE                      (CPI_BASE_ADDR + 0xC)
 
-#define RETURNED_IMAGE_RESOLUTION       (CPI_BASE_ADDR + 0x10)
-#define PIXEL                           (CPI_BASE_ADDR + 0x14)
-#define PIXEL_ADDR                      (CPI_BASE_ADDR + 0x18)
-#define PRESCALER                       (CPI_BASE_ADDR + 0x1C)
+#define RETURN_IMAGE_WIDTH              (CPI_BASE_ADDR + 0x10)
+#define RETURN_IMAGE_HEIGHT             (CPI_BASE_ADDR + 0x14)
+#define PIXEL                           (CPI_BASE_ADDR + 0x18)
+#define PIXEL_ADDR                      (CPI_BASE_ADDR + 0x1C)
+#define PRESCALER                       (CPI_BASE_ADDR + 0x20)
 
 // com7 reg: address 0x12
 #define SSCB_REG_RESET_ALL (1 << 7)
@@ -55,8 +56,8 @@ int main(void){
     while((reg_read8(CAM_STATUS) & 0x04) == 0); // wait for sccb to ready
     unsigned int mode = SSCB_REG_RESET_ALL | OUTPUT_RGB | OUTPUT_QCIF;
     configure_camera(0x12, mode) ;   // reset the camera to default mode
-
     printf("Reset the camera \n");
+
     while((reg_read8(CAM_STATUS) & 0x04) == 0);        // wait until sccb interface is ready
 
     reg_write8(PRESCALER, 2);   // test, REMEMBER TO DELETE LATER
@@ -69,6 +70,7 @@ int main(void){
 
     capture_image();    // capture image
 
+    while((reg_read8(CAM_STATUS) & 0x04) == 0);        // wait until sccb interface is ready
 
 
 //    while((reg_read8(CAM_STATUS) & 0x02) != 2);
@@ -78,6 +80,7 @@ int main(void){
 //      if (i % 8 == 0) printf("\n");
 //    }
 //    printf("\n");
-//    printf("Returned Resolution: %08X\n", reg_read32(RETURNED_IMAGE_RESOLUTION));
+//    printf("Returned image height: %08X\n", reg_read32(RETURN_IMAGE_HEIGHT));
+//    printf("Returned image width: %08X\n", reg_read32(RETURN_IMAGE_WIDTH));
 //    check_status();
 }
