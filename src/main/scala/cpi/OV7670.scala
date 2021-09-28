@@ -27,10 +27,11 @@ object CPIMMIO{
   val camCapture               = 0x04
   val camMode                  = 0x08
   val imageFormat              = 0x0C
-  val returnedImageResolution  = 0x10
-  val pixel                    = 0x14
-  val pixelAddr                = 0x18
-  val prescaler                = 0x1C
+  val returnImgWidth           = 0x10
+  val returnImgHeight          = 0x14
+  val pixel                    = 0x18
+  val pixelAddr                = 0x1C
+  val prescaler                = 0x20
 }
 
 class CPIIO(val p: CPIParams) extends Bundle{
@@ -134,13 +135,11 @@ trait CPIModule extends HasRegMap{
 
   val pixel = Wire(new DecoupledIO(UInt((params.bytePerPixel*8).W)))
   val CPI   = Module(new CPI(params))
-  val imgWidthImgHeightLen = log2Ceil(params.imgWidth)+log2Ceil(params.imgHeight)
 
   val status             = Wire(UInt(3.W))
   val captureFrame       = WireInit(false.B)
   val cameraMode         = Wire(DecoupledIO(UInt(16.W)))
   val pixelAddr          = Wire(UInt(CPI.io.pixelAddr.getWidth.W))
-  val returnedResolution = Wire(UInt(imgWidthImgHeightLen.W))
   val prescaler          = Reg(UInt(log2Ceil(params.maxPrescaler).W))
   val imageFormat        = Reg(UInt(1.W))
 
@@ -174,7 +173,6 @@ trait CPIModule extends HasRegMap{
 
   status := Cat(CPI.io.sccbReady, CPI.io.frameFull, CPI.io.capturing)
 
-  returnedResolution := Cat(CPI.io.frameWidth,CPI.io.frameHeight)
 
   regmap(
     CPIMMIO.interfaceStatus -> Seq(
@@ -186,8 +184,11 @@ trait CPIModule extends HasRegMap{
     CPIMMIO.imageFormat -> Seq(
       RegField.w(1,imageFormat)
     ),
-    CPIMMIO.returnedImageResolution -> Seq(
-      RegField.r(imgWidthImgHeightLen,returnedResolution)
+    CPIMMIO.returnImgWidth -> Seq(
+      RegField.r(CPI.io.frameWidth.getWidth,CPI.io.frameWidth)
+    ),
+    CPIMMIO.returnImgHeight -> Seq(
+      RegField.r(CPI.io.frameHeight.getWidth, CPI.io.frameHeight)
     ),
     CPIMMIO.pixel -> Seq(
       RegField.r(16,pixel)),
