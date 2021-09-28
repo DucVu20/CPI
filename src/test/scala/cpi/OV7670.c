@@ -60,8 +60,6 @@ int main(void){
 
     while((reg_read8(CAM_STATUS) & 0x04) == 0);        // wait until sccb interface is ready
 
-    reg_write8(PRESCALER, 2);   // test, REMEMBER TO DELETE LATER
-
     configure_camera(0x40, 0xD0);   // RGB565
     printf("Configured the RGB565 mode \n");
 
