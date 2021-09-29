@@ -92,9 +92,10 @@ int main(void){
     while((reg_read8(CAM_STATUS) & 0x02) == 0); // wait till the buffer is full
     check_status();
 
-    //    while((reg_read8(CAM_STATUS) & 0x02) == 2){
-    //      printf("%04X \n", reg_read16(PIXEL));
-    //    }
+    //===============read pixel from the camera=========//
+    while((reg_read8(CAM_STATUS) & 0x02) == 2){
+      printf("%04X ", reg_read16(PIXEL));
+    }
     printf("the resolution of the first shot is\n");
     printf("Returned image height: %08d\n", reg_read32(RETURN_IMAGE_HEIGHT));
     printf("Returned image width: %08d\n\n", reg_read32(RETURN_IMAGE_WIDTH));
