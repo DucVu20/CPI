@@ -18,7 +18,7 @@ case class CPIParams(
                       imgHeightCnt: Int      = 480,
                       bytePerPixel: Int      = 2,
                       bufferDepth: Int       = 352*288,
-                      sccbFreqkHz: Int       = 50,
+                      sccbFreqkHz: Int       = 100,
                       systemFreqMHz: Int     = 50,
                       maxPrescaler: Int      = 32
                     )

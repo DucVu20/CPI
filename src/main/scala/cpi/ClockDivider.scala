@@ -10,11 +10,10 @@ class ClockDivider(maxPrescaler: Int) extends Module{
     val reset        = Input(Bool())
     val prescaler    = Input(UInt(log2Ceil(maxPrescaler).W))
   })
-  val counterWidth = io.prescaler.getWidth
 
   withClockAndReset(io.clockIn, io.reset){
     val max           = io.prescaler>>1
-    val counter       = RegInit(0.U(counterWidth.W))
+    val counter       = RegInit(0.U((io.prescaler.getWidth).W))
     val dividedClock  = RegInit(false.B)
 
     counter         := counter+1.U
@@ -41,6 +40,5 @@ class ClockDividerDemo(maxPrescaler:Int) extends Module{
   clk_div.io.reset     := io.reset
   clk_div.io.prescaler := io.prescaler
   io.dividedClock      := clk_div.io.dividedClock
-
   println(clk_div.io.dividedClock.name)
 }
