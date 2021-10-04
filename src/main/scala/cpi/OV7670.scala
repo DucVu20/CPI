@@ -1,3 +1,4 @@
+
 package sislab.cpi
 
 import chisel3._
@@ -48,18 +49,19 @@ class CPIIO(val p: CPIParams) extends Bundle{
   val vsync        = Input(Bool())
   val pixelIn      = Input(UInt(8.W))
 
-  val grayscale    = Input(Bool())
+  //RGB888 will be generated if you choose byterPerPixel to be 3
+  val RGB888       = if(p.bytePerPixel == 3) Some(Input(Bool())) else None
   val capture      = Input(Bool())
-  val videoMode    = Input(Bool())
+  val videoMode    = Input(Bool()) // streaming consecutive frames when enabled 
 
   val pixelOut     = Output(UInt((8*p.bytePerPixel).W))
   val pixelAddr    = Output(UInt(log2Ceil(p.bufferDepth).W))
   val frameWidth   = Output(UInt(log2Ceil(p.imgWidthCnt).W))
   val frameHeight  = Output(UInt(log2Ceil(p.imgHeightCnt).W))
   val capturing    = Output(Bool())
-  val newFrame     = Output(Bool()) // interrupt
-  val frameFull    = Output(Bool()) //valid
-  val readFrame    = Input(Bool()) // ready
+  val newFrame     = Output(Bool()) // inform new frame, false when capture signal and vsync goes low
+  val frameFull    = Output(Bool()) // valid, interrupt, false when an entire frame is read out
+  val readFrame    = Input(Bool())  // ready
 
   val config         = Input(Bool())
   val coreEna        = Input(Bool())
@@ -112,9 +114,10 @@ class CPI(p: CPIParams) extends Module with HasCPIIO {
   captureModule.io.pixelIn     := io.pixelIn
   captureModule.io.capture     := io.capture
   captureModule.io.readFrame   := io.readFrame  // to read a frame, read frame signal must be high
-  captureModule.io.grayscale   := io.grayscale
   captureModule.io.videoMode   := io.videoMode
-
+  if(p.bytePerPixel == 3){
+    captureModule.io.RGB888.get  := io.RGB888.get
+  }
   io.pixelOut    := captureModule.io.pixelOut
   io.pixelAddr   := captureModule.io.pixelAddr
   io.frameHeight := captureModule.io.frameHeight
@@ -149,7 +152,7 @@ trait CPIModule extends HasRegMap{
   val pixel = Wire(new DecoupledIO(UInt((params.bytePerPixel*8).W)))
   val CPI   = Module(new CPI(params))
 
-  val status             = Wire(UInt(4.W))
+  val status             = Wire(UInt(5.W))
   val cameraMode         = Wire(DecoupledIO(UInt(16.W)))
   val pixelAddr          = Wire(UInt(CPI.io.pixelAddr.getWidth.W))
   val capture            = WireInit(false.B)
@@ -157,10 +160,11 @@ trait CPIModule extends HasRegMap{
   val CPISetupReg        = Reg(UInt(4.W))
   val preScalerLow       = Reg(UInt(8.W))
   val preScalerHigh      = Reg(UInt(8.W))
-  //==== Cat(CPI.io.videoMode, CPI.io.grayscale, CPI.io.coreEna, CPI.io.activateXCLK)===//
-
-  CPI.io.videoMode    := CPISetupReg(3)
-  CPI.io.grayscale    := CPISetupReg(2)
+  //==== Cat(RGB888, CPI.io.videoMode, CPI.io.coreEna, CPI.io.activateXCLK)===//
+  if(params.bytePerPixel == 3){
+    CPI.io.RGB888.get   := CPISetupReg(3)
+  }
+  CPI.io.videoMode    := CPISetupReg(2)
   CPI.io.coreEna      := CPISetupReg(1)
   CPI.io.activateXCLK := CPISetupReg(0)
 
@@ -189,13 +193,13 @@ trait CPIModule extends HasRegMap{
   pixel.valid        := CPI.io.frameFull
   CPI.io.readFrame   := pixel.ready
   pixelAddr          := CPI.io.pixelAddr
-
-  status := Cat(CPI.io.frameFull, CPI.io.sccbReady, CPI.io.newFrame, CPI.io.capturing)
+  // status: videomode, sccbready, frameFull, newFrame, capturing
+  status := Cat(CPISetupReg(2), CPI.io.sccbReady, CPI.io.frameFull, CPI.io.newFrame, CPI.io.capturing)
   regmap(
     CPIMMIO.interfaceSetup -> Seq(
       RegField.w(CPISetupReg.getWidth, CPISetupReg)),
     CPIMMIO.interfaceStatus -> Seq(
-      RegField.r(4,status)),
+      RegField.r(status.getWidth, status)),
     CPIMMIO.XCLKPrescaler -> Seq(
       RegField.w(XCLKPrescaler.getWidth, XCLKPrescaler)),
     CPIMMIO.SCCBData -> Seq(

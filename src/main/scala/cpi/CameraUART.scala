@@ -23,7 +23,7 @@ class CameraUartTop(p: params) extends  Module {
   val height = p.imgHeight
 
   var CPI = Module(new CaptureModule(p.imgWidth, p.imgHeight, 2, p.bufferDepth))
-  val sccbInterface = Module(new SCCBInterface((p.systemFreqMHz*MHz).toInt, p.sccbFreqHz))
+  val sccbInterface = Module(new I2CMaster)
   val receiver      = Module(new Rx_ver1((p.systemFreqMHz*MHz).toInt, p.baudRate))
   val transmitter   = Module(new Tx((p.systemFreqMHz*MHz).toInt, p.baudRate))
   //dontTouch(CPI)
@@ -142,12 +142,12 @@ class CameraUartTop(p: params) extends  Module {
         is(4.U){  //check buffer status
           when(txReady){
             txValid := true.B
-            txData  := CPI.io.frameFull
+            txData  := CPI.io.newFrame
             FMS     := idle
           }
         }
         is(5.U){  // read image
-          when(CPI.io.frameFull){
+          when(CPI.io.newFrame){
             readImage := true.B
             FMS       := idle
           }
@@ -193,7 +193,7 @@ class CameraUartTop(p: params) extends  Module {
       when(transmitter.io.channel.ready){
         txFms := Mux(byte_counter.asBool, fmsTransmitToCpu, fmsReadPixel)
       }
-      when(!CPI.io.frameFull){ // when empty, load the final pixel before
+      when(!CPI.io.newFrame){ // when empty, load the final pixel before
         // returning back to idle state
         txFms := Mux(byte_counter.asBool(), fmsTransmitToCpu, idle)
       }
@@ -201,7 +201,7 @@ class CameraUartTop(p: params) extends  Module {
   }
 
   // sccb interface
-  sccbInterface.io.controlAddress := addrField
+  sccbInterface.io.controlAddr    := addrField
   sccbInterface.io.configData     := dataField
   sccbInterface.io.config         := config
   io.SIOC := sccbInterface.io.SIOC
@@ -213,7 +213,7 @@ class CameraUartTop(p: params) extends  Module {
   CPI.io.vsync     := io.vsync
   CPI.io.pixelIn   := io.pixelIn
   CPI.io.capture   := capture
-  CPI.io.grayImage := false.B
+  CPI.io.grayscale := false.B
 
   val frameWidth = Wire(UInt(log2Ceil(p.imgWidth).W))
   val frameHeight = Wire(UInt(log2Ceil(p.imgHeight).W))
