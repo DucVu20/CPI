@@ -90,7 +90,7 @@ class UarCPITest extends FlatSpec with ChiselScalatestTester{
     val tp = 2 * pclock
     val t_line = 10 * pclock
     //====================synthesized timing========================//
-    val refFrame = new referenceFrame().generateRandomFrame(height * width, 1)
+    val refFrame = new referenceFrame().generateRandomFrame(width * height, "RGB565")
 
     dut.io.vsync.poke(false.B)
     dut.io.href.poke(false.B)
