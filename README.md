@@ -10,3 +10,7 @@ Since the design is parameterizable, you can also configure this module to captu
 Depending on the amount of BRAM avaible on your FPGA board, you can also configure the buffer size to store images via the *bufferDepth* parameter. For example, you have to configure specify bufferDepth to *352x290* to capture any images with sizes less than CIF such as QCIF, QVGA (320x240)... The other two parameters *imgWidthCnt* and *imgHeighCnt* is used to specify the maximum bit width of two counters, namely colCnt, and rowCnt, which return the resolution of a frame transmitted by the interface.
 # SoC Integration of the interface on ChipYard platfrom
 The class for integrating the entire design into a system on chip on Chipyard platform is OV7670.scala. The class for configuring hardware of the CPI is in CPIParams, and configuration, control, status registers are located in CPIMMIO. Sofware file for using the camera is located in /main/src/test/scala/cpi/OV7670.c. To compile the C file for the RISCV based core, run *make OV7670.riscv*.
+# References
+[1] https://readthedocs.org/projects/chipyard/downloads/pdf/dev/ 
+[2] I2C-Master Core Specification - Richard Herveille. Available on https://opencores.org/projects/i2c/downloads
+[3] http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf
