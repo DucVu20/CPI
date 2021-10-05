@@ -1,7 +1,7 @@
 # Camera Interface: OV7670-Chisel
 Targeted camera: OV7670 OmmiVision
 # Introduction
-This camera interface is designed to integrate on ChipYard platform to acquire images from OmminiVision OV7670 for a CNN accelerator. However, you can use it for your own needs. The design is written in Chisel and is highly parameterizable. Although the interface is targeted at OV7670, it can be used for any camera with the same interface. The design uses the I2C interface to configure the camera and supports two versions 16 bit RGB formats and RGB888. Although our FPGA and pixel clock run at different frequency, the entire system is single clock domain. I recommend you guys to visit the datasheet for more information about the OV7670 camera: http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf
+This camera interface is designed to integrate on ChipYard platform to acquire images from OmminiVision OV7670 for a CNN accelerator. However, you can use it for your own needs. The design is written in Chisel and is highly parameterizable. Although the design targets OV7670, it can be used for any camera with the same interface. The design deploys the I2C interface to configure the camera and supports two versions 16 bit RGB formats and RGB888. Although our FPGA and pixel clock run at different frequency, the entire system is single clock domain. I recommend you guys to visit the datasheet for more information about the OV7670 camera: http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf
 # Configuration
 ## SCCB Interface
 The OV7670 requires configuration to output the correct color format with the proper color balance. This is done over SCCB interface, a copy of the I2C protocol. Since we're only interested in writing configurations for the camera and not in reading data from registers inside the camera, the I2C is redesigned only for transmiting data. To configure the camera, you must specify the address of a register and its coresponding data, and at insert the *config* signal at the same clock cycle. To disable communication over the I2C interface, write false to the *coreEna* signal. When not configuring the camera, the SCCB should be disabled.
@@ -15,4 +15,4 @@ The class for integrating the entire design into a system on chip on Chipyard pl
 # References
 [1] https://readthedocs.org/projects/chipyard/downloads/pdf/dev/ <br />
 [2] I2C-Master Core Specification - Richard Herveille. Available on https://opencores.org/projects/i2c/downloads <br />
-[3] http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf <br />
+[3] http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf <br />e
