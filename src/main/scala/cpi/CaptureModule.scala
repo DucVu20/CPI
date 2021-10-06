@@ -79,7 +79,7 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
     }.otherwise{
       pixelValid := false.B
     }
-    when(readPtr === (bufferDepthCounter - 1.U)) {
+    when(readPtr === bufferDepthCounter) {
       readPtr            := 0.U
       bufferDepthCounter := 0.U
       frameFull          := false.B
