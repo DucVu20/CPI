@@ -6,6 +6,8 @@ import chiseltest._
 import chiseltest.internal.WriteVcdAnnotation
 import chiseltest.experimental.TestOptionBuilder._
 import scala.math.pow
+import scala.io.Source
+
 
 class referenceFrame{
 
@@ -55,7 +57,6 @@ class referenceFrame{
   }
 }
 
-
 class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
   behavior of "Capture module"
 
@@ -69,7 +70,7 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
     val tp = 2 * pclock
     val t_line = 2 * pclock
     val imageFormat = if(!testRGB565onRGB88HW) {if(bytePerPixel == 3) "RGB888"
-                                      else "16bitRGB"} else "16bitRGB"
+    else "16bitRGB"} else "16bitRGB"
     if(bytePerPixel == 3){
       if(testRGB565onRGB88HW) dut.io.RGB888.get.poke(false.B) else dut.io.RGB888.get.poke(true.B)
     }
@@ -156,10 +157,10 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
           dut.io.readFrame.poke(true.B)
           dut.clock.step(1)
           var idx_out = dut.io.pixelAddr.peek.litValue.toInt // pixel_address
-          var refPixelVal = new referenceFrame().validate(idx_out, refFrame).toInt
-          dut.io.pixelOut.expect(refPixelVal.U)
-          if (refPixelVal != dut.io.pixelOut.peek.litValue.toInt) {
-            nTestFailed += 1
+          if(dut.io.pixelValid.peek().litToBoolean) {
+            var refPixelVal = new referenceFrame().validate(idx_out, refFrame).toInt
+
+            dut.io.pixelOut.expect(refPixelVal.U)
           }
         }
 
@@ -184,11 +185,11 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
     dut.clock.step(300)
   }
   it should "RGB16bit on RGB16 HW" in {
-    test(new CaptureModule(20, 20, 2, 160*180))
+    test(new CaptureModule(40, 40, 2, 160*180))
     { dut => CaptureModuleTest(dut,2, 30, 30,2, 4, false )}
   }
   it should "RGB888 on RGB24 HW" in {
-    test(new CaptureModule(20, 20, 3, 160*180))
+    test(new CaptureModule(40, 40, 3, 160*180))
     { dut => CaptureModuleTest(dut,2, 30, 30,3, 4, false )}
   }
   it should "RGB16bit on RGB24HW" in {
@@ -196,10 +197,118 @@ class CaptureModuleChiselTest extends FlatSpec with ChiselScalatestTester{
     { dut => CaptureModuleTest(dut,2, 30, 30,3, 4, true )}
   }
 
-//  "CaptureModule wave" should "pass" in{
-//    test(new CaptureModule(60,60,
-//      3,50*50)).withAnnotations(Seq(WriteVcdAnnotation)){
-//      dut => CaptureModuleTest(dut, 2, 20,20,3, 4)
-//    }
-//  }
+  //  "CaptureModule wave" should "pass" in{
+  //    test(new CaptureModule(60,60,
+  //      3,50*50)).withAnnotations(Seq(WriteVcdAnnotation)){
+  //      dut => CaptureModuleTest(dut, 2, 20,20,3, 4)
+  //    }
+  //  }
+}
+
+class CaptureModuleChiselTestRealFrame extends FlatSpec with ChiselScalatestTester {
+  behavior of "Capture module"
+
+  def CaptureModuleTestDogFrame[T <: CaptureModule](dut: T, n: Int, imgWidth: Int, imgHeight: Int,
+                                            bytePerPixel: Int, nTest: Int
+                                            ) = {
+
+    val pclock = n
+    var nTestFailed = 0
+
+    val tp = 2 * pclock
+    val t_line = 2 * pclock
+
+    //====================synthesized timing========================//
+    val dogFrame = Source.fromFile("E:/HDL/CHISEL projects/CPI/src/test/resources/dogGray.txt").getLines.toArray
+
+    dut.io.vsync.poke(false.B)
+    dut.io.href.poke(false.B)
+    dut.clock.step(10)
+    dut.io.capture.poke(true.B)
+    dut.clock.step(1)
+    dut.io.capture.poke(false.B)
+    dut.io.vsync.poke(true.B)
+    dut.io.href.poke(false.B)
+    dut.clock.step(3 * t_line)
+    dut.io.vsync.poke(false.B)
+    dut.io.href.poke(false.B)
+    dut.clock.step(t_line)
+
+    //println("begin generating signals for "+ imageFormat)
+    var idx = 0
+    var pclk = true
+    for (col <- 0 until (imgWidth)) {
+      dut.io.href.poke(true.B)
+      for (row <- 0 until (imgHeight)) {
+        for (plkClock <- 0 until (2)) {
+
+          dut.io.href.poke(true.B)
+          dut.io.vsync.poke(false.B)
+          pclk = !pclk
+          dut.io.pclk.poke(pclk.asBool())
+          if (pclk == false) {
+            dut.io.pixelIn.poke(dogFrame(idx).toInt.asUInt())
+          }
+          dut.clock.step(pclock / 2)
+          pclk = !pclk
+          dut.io.pclk.poke(pclk.asBool())
+          dut.clock.step(pclock / 2)
+        }
+        idx = idx + 1
+      }
+      dut.io.href.poke(false.B)
+      dut.clock.step(2 * tp)
+    }
+
+    // this part is meant to validate that when the capture signal is not triggered
+    // the interface wouldn't capture when vsync changes
+    for (a <- 0 until 4) {
+      dut.clock.step(tp)
+      dut.io.vsync.poke(true.B)
+      dut.clock.step(50)
+      dut.io.vsync.poke(false.B)
+      dut.clock.step(50)
+      for (a <- 0 until 5) {
+        dut.io.href.poke(true.B)
+        dut.clock.step(50)
+        dut.io.href.poke(false.B)
+        dut.clock.step(50)
+      }
+      dut.io.vsync.poke(true.B)
+      dut.clock.step(50)
+      dut.io.vsync.poke(false.B)
+      dut.clock.step(50)
+    }
+    dut.io.vsync.poke(false.B)
+    dut.io.capture.poke(true.B)
+    dut.clock.step(2)
+    dut.io.capture.poke(false.B)
+
+    //====================validation=======================//
+    //println("begin to validate captured frame")
+
+    dut.clock.setTimeout(imgWidth * imgHeight * 2 + 50)
+    // this must be inserted if no input signals are changed for more than 1000 cycles
+    // read all data from the buffer requires the number of cycles equal to the buffer's depth
+    while (dut.io.frameFull.peek.litToBoolean) {
+      dut.io.readFrame.poke(true.B)
+      dut.clock.step(1)
+      var idx_out = dut.io.pixelAddr.peek.litValue.toInt // pixel_address
+      if (dut.io.pixelValid.peek.litToBoolean) {
+        print(dut.io.pixelOut.peek().litValue().toInt.toHexString + " ")
+      }
+    }
+    println(" ")
+  }
+  it should "RGB16bit on RGB16 HW" in {
+    test(new CaptureModule(640, 480, 2, 259 * 194)) {
+      dut => CaptureModuleTestDogFrame(dut, 2, 259, 194, 2, 4) }
+  }
+
+    //  "CaptureModule wave" should "pass" in{
+    //    test(new CaptureModule(60,60,
+    //      3,50*50)).withAnnotations(Seq(WriteVcdAnnotation)){
+    //      dut => CaptureModuleTest(dut, 2, 20,20,3, 4)
+    //    }
+    //  }
 }
