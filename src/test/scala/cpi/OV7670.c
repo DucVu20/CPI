@@ -181,7 +181,7 @@ int main(void){
     while((reg_read8(INTERFACE_STATUS) & 0x02) == 0);
     check_status();
     if((reg_read16(RETURN_IMAGE_WIDTH)==352) & (reg_read16(RETURN_IMAGE_HEIGHT) == 290)){
-      while((reg_read8(INTERFACE_STATUS) & 0x04) == 4){ // while a frame hasn't been readout
+      while((reg_read8(INTERFACE_STATUS) & 0x04) == 4){ // while a frame hasn't been readouty
 	printf("%04X ", reg_read16(PIXEL)&0x00FF);  
       }
     }
