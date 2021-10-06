@@ -18,34 +18,34 @@
 
 
 // com7 reg: address 0x12
-#define REG_COM7    	0x12	/* Control 7 */
-#define COM7_RESET  	0x80	/* Register reset */
-#define COM7_FMT_MASK	0x38
-#define COM7_FMT_VGA	0x00
-#define	COM7_FMT_CIF	0x20	/* CIF format */
-#define COM7_FMT_QVGA	0x10	/* QVGA format */
-#define COM7_FMT_QCIF	0x08	/* QCIF format */
-#define	COM7_RGB        0x04	/* bits 0 and 2 - RGB format */
-#define	COM7_YUV        0x00	/* YUV */
-// com15 reg: address 0x40
-#define REG_COM15	0x40  /* Control 15 */
-#define COM15_R10F0     0x00  /* Data range 10 to F0 */
-#define COM15_R01FE     0x80  /*      01 to FE */
-#define COM15_R00FF     0xc0  /*      00 to FF */
-#define COM15_RGB565    0x10  /* RGB565 output */
-#define COM15_RGB555    0x30  /* RGB555 output */
+#define REG_COM7		0x12	/* Control 7 */
+#define COM7_RESET		0x80	/* Register reset */
+#define COM7_FMT_MASK		0x38
+#define COM7_FMT_VGA		0x00
+#define	COM7_FMT_CIF		0x20	/* CIF format */
+#define COM7_FMT_QVGA		0x10	/* QVGA format */
+#define COM7_FMT_QCIF		0x08	/* QCIF format */
+#define	COM7_RGB		0x04	/* bits 0 and 2 - RGB format */
+#define	COM7_YUV		0x00	/* YUV */
+// com15 reg: address		0x40
+#define REG_COM15		0x40  /* Control 15 */
+#define COM15_R10F0		0x00  /* Data range 10 to F0 */
+#define COM15_R01FE		0x80  /*      01 to FE */
+#define COM15_R00FF		0xc0  /*      00 to FF */
+#define COM15_RGB565		0x10  /* RGB565 output */
+#define COM15_RGB555		0x30  /* RGB555 output */
 // CPI interface setup register
-#define ACTIVATE_XCLK   0x01
-#define I2C_CORE_ENA 0x02
-#define VIDEO_MODE 0x04
-#define RGB888 0x08 /* if configure hardware for RGB888 */
+#define ACTIVATE_XCLK		0x01
+#define I2C_CORE_ENA		0x02
+#define VIDEO_MODE		0x04
+#define RGB888			0x08 /* if configure hardware for RGB888 */
 
 // CPI status register:
-#define CAM_CAPTURING 0x01
-#define NEW_FRAME 0x02
-#define FRAME_FULL 0x04
-#define SCCB_READY 0x08
-#define VIDEO_OR_CAPTURE 0x10
+#define CAM_CAPTURING		0x01
+#define NEW_FRAME		0x02
+#define FRAME_FULL		0x04
+#define SCCB_READY		0x08
+#define VIDEO_OR_CAPTURE	0x10
 
 volatile int interface_status, return_image_width, return_image_height;
 
@@ -64,15 +64,23 @@ void check_status(){
     }else{
        printf("the camera is idle\n");
     }
-
-    if( (interface_status & 0x02) == 2){
+    // this signal only change when a new capture signal is inserted
+    // it is used to inform a new frame
+    if( (interface_status & 0x02) == 2){      
         printf("a new frame has been captured\n");
      }
-
+    // this signal will be 0 when a frame is readout, thus should be used
+    // in polling
     if( (interface_status & 0x04) == 4){
-        printf("sccb interface is ready\n");
+        printf("a new frame has been captured\n");
     }else{
-         printf("sccb interface is busy\n");
+         printf("a new frame has been read out\n");
+    }
+    if( (interface_status & 0x08) == 8) {
+      printf("the sccb interface is read");
+    }
+    else{
+      printf("the sccb interface is idle");
     }
     if( (interface_status & 0x10) == 16){
       printf("the interface is in video mode");
@@ -103,7 +111,6 @@ void read_frame(){
         printf("%04X ",reg_read16(PIXEL));
     }
 }
-
 void wait_frame(){
     while((reg_read8(INTERFACE_STATUS) & 0x02) == 0);
     printf("new frame \n");
@@ -118,10 +125,10 @@ void delay_ms(char ms){
 int main(void){
     printf("====================================================================");
     check_status();
-    reg_write8(I2C_PRESCALER_LOW, 99); // generate 100k SIOC
+    reg_write8(I2C_PRESCALER_LOW, 49); // generate 100k SIOC
     reg_write8(I2C_PRESCALER_HIGH, 0); 
     reg_write8(XCLK_PRESCALER,4); // generate 12.5 MHz XCLK
-    reg_write8(INTERFACE_SETUP, 3); // activate XCLK, SCCB, config for capturing rgb
+    reg_write8(INTERFACE_SETUP, 3); // activate XCLK, SCCB
     printf("Reset the camera ");
     configure_camera(REG_COM7, COM7_RESET) ;   // reset the camera to default mode
     delay_ms(1);
@@ -174,7 +181,7 @@ int main(void){
     while((reg_read8(INTERFACE_STATUS) & 0x02) == 0);
     check_status();
     if((reg_read16(RETURN_IMAGE_WIDTH)==352) & (reg_read16(RETURN_IMAGE_HEIGHT) == 290)){
-      while((reg_read8(INTERFACE_STATUS) & 0x02) == 2){
+      while((reg_read8(INTERFACE_STATUS) & 0x04) == 4){ // while a frame hasn't been readout
 	printf("%04X ", reg_read16(PIXEL)&0x00FF);  
       }
     }
