@@ -60,8 +60,9 @@ class CPIIO(val p: CPIParams) extends Bundle{
   val frameHeight  = Output(UInt(log2Ceil(p.imgHeightCnt).W))
   val capturing    = Output(Bool())
   val newFrame     = Output(Bool()) // inform new frame, false when capture signal and vsync goes low
-  val frameFull    = Output(Bool()) // valid, interrupt, false when an entire frame is read out
+  val frameFull    = Output(Bool()) // interrupt, false when an entire frame is read out
   val readFrame    = Input(Bool())  // ready
+  val pixelValid   = Output(Bool()) // valid
 
   val config         = Input(Bool())
   val coreEna        = Input(Bool())
@@ -125,6 +126,7 @@ class CPI(p: CPIParams) extends Module with HasCPIIO {
   io.capturing   := captureModule.io.capturing
   io.newFrame    := captureModule.io.newFrame
   io.frameFull   := captureModule.io.frameFull
+  io.pixelValid  := captureModule.io.pixelValid
 
   XCLKGenerator.io.clockIn      := clock
   io.XCLK                       := XCLKGenerator.io.XCLK
@@ -190,7 +192,7 @@ trait CPIModule extends HasRegMap{
   CPI.io.preScalerHigh  := preScalerHigh
 
   pixel.bits         := CPI.io.pixelOut
-  pixel.valid        := CPI.io.frameFull
+  pixel.valid        := CPI.io.pixelValid
   CPI.io.readFrame   := pixel.ready
   pixelAddr          := CPI.io.pixelAddr
   // status: videomode, sccbready, frameFull, newFrame, capturing

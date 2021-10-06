@@ -25,7 +25,8 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
     val videoMode    = Input(Bool())
     val capturing    = Output(Bool())
     val readFrame    = Input(Bool())  // ready
-    val frameFull    = Output(Bool()) // valid, interrupt, false when
+    val pixelValid   = Output(Bool()) // valid
+    val frameFull    = Output(Bool()) // interrupt, false when
                                       // a frame is read out
     val newFrame     = Output(Bool()) // inform a new frame
   })
@@ -41,7 +42,7 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
   val pixel               = if (bytePerPixel == 2) Some(Cat(firstByte, secondByte))
                             else Some(Cat(firstByte, secondByte, thirdByte.get))
 
-  val captureSignalHolder = RegInit(false.B)  // used to hold the capture
+  val captureSignalHolder = RegInit(false.B)  // used to hold the capture event
   // signal to capture an image when signals for a new frame is available
   val bufferDepthCounter  = RegInit(0.U(log2Ceil(bufferDepth).W))
   val newFrame            = RegInit(false.B)
@@ -51,14 +52,15 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
   val frameFull           = RegInit(false.B) // buffer status register
   val bufferOverflow      = RegInit(false.B)
   val capturing           = WireInit(false.B)
+  val pclkRisingEdge      = WireInit(false.B)
 
-  val bufferAddr = WireInit(0.U(log2Ceil(bufferDepth).W))
-  val wrEnaWire  = WireInit(false.B)
-  val wrEna      = RegNext(wrEnaWire)
+  val bufferAddr  = WireInit(0.U(log2Ceil(bufferDepth).W))
+  val wrEnaWire   = WireInit(false.B)
+  val wrEna       = RegNext(wrEnaWire)
+  val pixelValid  = RegInit(false.B)
 
   val buffer = Module(new SinglePortRam(bufferDepth,UInt((8*bytePerPixel).W)))
 
-  val pclkRisingEdge   = io.pclk & (!RegNext(io.pclk))
   val vsyncFallingEdge = (!io.vsync) & RegNext(io.vsync)
   val hrefFallingEdge  = (!io.href) & RegNext(io.href)
   val hrefRisingEdge   = io.href & (!RegNext(io.href))
@@ -69,14 +71,19 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
     when(capturing && (!io.href)){
       bufferAddr := readPtr
       readPtr    := readPtr + 1.U
+      pixelValid := true.B
     }.elsewhen( !capturing){
       bufferAddr := readPtr
       readPtr    := readPtr + 1.U
+      pixelValid := true.B
+    }.otherwise{
+      pixelValid := false.B
     }
     when(readPtr === (bufferDepthCounter - 1.U)) {
       readPtr            := 0.U
       bufferDepthCounter := 0.U
       frameFull          := false.B
+      pixelValid         := false.B
     }
   }.otherwise {
     bufferAddr := RegNext(writePtr)
@@ -108,54 +115,57 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
       newFrame  := Mux(io.vsync, true.B, false.B)
       FMS       := Mux(io.vsync, idle, captureFrame)
 
-      when(pclkRisingEdge && io.href) {
-        if(bytePerPixel == 2){ // for 16 bit rgb version
-          pixelIndex := !pixelIndex
-          switch(pixelIndex) {
-            is(0.U) {
-              firstByte := io.pixelIn
-            }
-            is(1.U) {
-              secondByte := io.pixelIn
-              wrEnaWire  := pclkRisingEdge
-            }
-          }
-        }
-        else if (bytePerPixel == 3) { // for 24 bit rgb version
-          pixelIndex := pixelIndex + 1.U
-          when(io.RGB888.get) {
-            when(pixelIndex === 2.U) {
-              pixelIndex := 0.U
-            }
+      when(io.href) {
+        pclkRisingEdge := io.pclk & (!RegNext(io.pclk))
+        when(pclkRisingEdge) {
+          if (bytePerPixel == 2) { // for 16 bit rgb version
+            pixelIndex := !pixelIndex
             switch(pixelIndex) {
               is(0.U) {
                 firstByte := io.pixelIn
               }
               is(1.U) {
                 secondByte := io.pixelIn
-              }
-              is(2.U) {
-                thirdByte.get := io.pixelIn
-                wrEnaWire := pclkRisingEdge
-              }
-            }
-          }.otherwise {
-            when(pixelIndex === 1.U) {
-              pixelIndex   := 0.U
-            }
-            firstByte      := 0.U
-            switch(pixelIndex) {
-              is(0.U) {
-                secondByte := io.pixelIn
-              }
-              is(1.U) {
-                thirdByte.get := io.pixelIn
                 wrEnaWire := pclkRisingEdge
               }
             }
           }
+          else if (bytePerPixel == 3) { // for 24 bit rgb version
+            pixelIndex := pixelIndex + 1.U
+            when(io.RGB888.get) {
+              when(pixelIndex === 2.U) {
+                pixelIndex := 0.U
+              }
+              switch(pixelIndex) {
+                is(0.U) {
+                  firstByte := io.pixelIn
+                }
+                is(1.U) {
+                  secondByte := io.pixelIn
+                }
+                is(2.U) {
+                  thirdByte.get := io.pixelIn
+                  wrEnaWire := pclkRisingEdge
+                }
+              }
+            }.otherwise {
+              when(pixelIndex === 1.U) {
+                pixelIndex := 0.U
+              }
+              firstByte := 0.U
+              switch(pixelIndex) {
+                is(0.U) {
+                  secondByte := io.pixelIn
+                }
+                is(1.U) {
+                  thirdByte.get := io.pixelIn
+                  wrEnaWire := pclkRisingEdge
+                }
+              }
+            }
+          }
+          else None
         }
-        else None
       }
       when(wrEnaWire){  // increase counter when write to mem
         colCnt     := colCnt + 1.U
@@ -186,4 +196,5 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
   io.pixelOut       := buffer.io.dataOut
   io.newFrame       := newFrame
   io.frameFull      := frameFull
+  io.pixelValid     := pixelValid
 }
