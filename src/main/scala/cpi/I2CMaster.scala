@@ -13,15 +13,15 @@ import chisel3.util._
 
 class I2CMaster extends Module{
   val io = IO(new Bundle{
-    val config         = Input(Bool())
-    val sccbReady      = Output(Bool())
-    val SIOC           = Output(Bool())
-    val SIOD           = Output(Bool())
-    val configData     = Input(UInt(8.W))
-    val controlAddr    = Input(UInt(8.W))
-    val coreEna        = Input(Bool())
-    val preScalerLow   = Input(UInt(8.W))
-    val preScalerHigh  = Input(UInt(8.W))
+    val config        = Input(Bool())
+    val sccbReady     = Output(Bool())
+    val SIOC          = Output(Bool())
+    val SIOD          = Output(Bool())
+    val configData    = Input(UInt(8.W))
+    val controlAddr   = Input(UInt(8.W))
+    val coreEna       = Input(Bool())
+    val preScalerLow  = Input(UInt(8.W))
+    val preScalerHigh = Input(UInt(8.W))
   })
   // as we only need to set up working modes for the camera, 3 phase write transmission cycle is employed
   // phase 1: ID Address, which is "h42" for OV7670

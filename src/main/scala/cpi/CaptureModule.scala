@@ -10,36 +10,35 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
   val depth     = bufferDepth
 
   val io  = IO(new Bundle {
-    val pclk         = Input(Bool())
-    val href         = Input(Bool())
-    val vsync        = Input(Bool())
-    val pixelIn      = Input(UInt(8.W))
-    val pixelOut     = Output(UInt((8*bytePerPixel).W))
-    val pixelAddr    = Output(UInt(log2Ceil(bufferDepth).W))
-    val frameWidth   = Output(UInt(log2Ceil(imgWidthCnt).W))
-    val frameHeight  = Output(UInt(log2Ceil(imgHeightCnt).W))
-    val RGB888       = if(bytePerPixel == 3) Some(Input(Bool())) else None
+    val pclk        = Input(Bool())
+    val href        = Input(Bool())
+    val vsync       = Input(Bool())
+    val pixelIn     = Input(UInt(8.W))
+    val pixelOut    = Output(UInt((8*bytePerPixel).W))
+    val pixelAddr   = Output(UInt(log2Ceil(bufferDepth).W))
+    val frameWidth  = Output(UInt(log2Ceil(imgWidthCnt).W))
+    val frameHeight = Output(UInt(log2Ceil(imgHeightCnt).W))
+    val RGB888      = if(bytePerPixel == 3) Some(Input(Bool())) else None
     // allow the RGB888 version to capture RGB 16bit images
-
-    val capture      = Input(Bool())
-    val videoMode    = Input(Bool())
-    val capturing    = Output(Bool())
-    val readFrame    = Input(Bool())  // ready
-    val pixelValid   = Output(Bool()) // valid
-    val frameFull    = Output(Bool()) // interrupt, false when
+    val capture     = Input(Bool())
+    val videoMode   = Input(Bool())
+    val capturing   = Output(Bool())
+    val readFrame   = Input(Bool())  // ready
+    val pixelValid  = Output(Bool()) // valid
+    val frameFull   = Output(Bool()) // interrupt, false when
                                       // a frame is read out
-    val newFrame     = Output(Bool()) // inform a new frame
+    val newFrame    = Output(Bool()) // inform a new frame
   })
 
   val idle :: captureFrame :: Nil = Enum(2)
   val FMS = RegInit(idle)
 
-  val writePtr            = RegInit(0.U(log2Ceil(bufferDepth).W))
-  val readPtr             = RegInit(0.U(log2Ceil(bufferDepth).W))
-  val firstByte           = RegInit(0.U(8.W))
-  val secondByte          = RegInit(0.U(8.W))
-  val thirdByte           = if (bytePerPixel == 3) Some(RegInit(0.U(8.W))) else None
-  val pixel               = if (bytePerPixel == 2) Some(Cat(firstByte, secondByte))
+  val writePtr   = RegInit(0.U(log2Ceil(bufferDepth).W))
+  val readPtr    = RegInit(0.U(log2Ceil(bufferDepth).W))
+  val firstByte  = RegInit(0.U(8.W))
+  val secondByte = RegInit(0.U(8.W))
+  val thirdByte  = if (bytePerPixel == 3) Some(RegInit(0.U(8.W))) else None
+  val pixel      = if (bytePerPixel == 2) Some(Cat(firstByte, secondByte))
                             else Some(Cat(firstByte, secondByte, thirdByte.get))
 
   val captureSignalHolder = RegInit(false.B)  // used to hold the capture event
@@ -61,9 +60,9 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
 
   val buffer = Module(new SinglePortRam(bufferDepth,UInt((8*bytePerPixel).W)))
 
-  val vsyncFallingEdge = (!io.vsync) & RegNext(io.vsync)
-  val hrefFallingEdge  = (!io.href) & RegNext(io.href)
-  val hrefRisingEdge   = io.href & (!RegNext(io.href))
+  val vsyncFallingEdge = (!io.vsync) && RegNext(io.vsync)
+  val hrefFallingEdge  = (!io.href)  && RegNext(io.href)
+  val hrefRisingEdge   =  io.href    && (!RegNext(io.href))
 
   //=====================READ ADDRESS GENERATOR==================//
   // allow reading pixels from the buffer while writePtr is not writing//
