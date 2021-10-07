@@ -294,6 +294,9 @@ class CaptureModuleChiselTestRealFrame extends FlatSpec with ChiselScalatestTest
       dut.io.readFrame.poke(true.B)
       dut.clock.step(1)
       var idx_out = dut.io.pixelAddr.peek.litValue.toInt // pixel_address
+      // print out the YUV value of the photo and apply the 0xFF mask before recovering the
+      // the result back to gray image. The python function in the test/resources will
+      // help you recover these pixel values back to the orginal image (which is a dog)
       if (dut.io.pixelValid.peek.litToBoolean) {
         print(dut.io.pixelOut.peek().litValue().toInt.toHexString + " ")
       }
@@ -304,11 +307,4 @@ class CaptureModuleChiselTestRealFrame extends FlatSpec with ChiselScalatestTest
     test(new CaptureModule(640, 480, 2, 259 * 194)) {
       dut => CaptureModuleTestDogFrame(dut, 2, 259, 194, 2, 4) }
   }
-
-    //  "CaptureModule wave" should "pass" in{
-    //    test(new CaptureModule(60,60,
-    //      3,50*50)).withAnnotations(Seq(WriteVcdAnnotation)){
-    //      dut => CaptureModuleTest(dut, 2, 20,20,3, 4)
-    //    }
-    //  }
 }
