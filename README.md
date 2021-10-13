@@ -17,5 +17,5 @@ The class for integrating the entire design into a system on chip on Chipyard pl
 [2] I2C-Master Core Specification - Richard Herveille. Available on https://opencores.org/projects/i2c/downloads <br />
 [3] http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf <br />
 # Contact
-gmail: leducvuvietnam@gmail.com
+gmail: leducvuvietnam@gmail.com <br />
 Linkedin: https://www.linkedin.com/in/vu-d-le-47813a170/
