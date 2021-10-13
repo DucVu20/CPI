@@ -16,8 +16,8 @@ class SCCBInterfaceTest extends FlatSpec with ChiselScalatestTester{
 
     dut.io.config.poke(false.B)
     dut.io.coreEna.poke(true.B)
-    dut.io.preScalerLow.poke(1.U)
-    dut.io.preScalerHigh.poke(1.U)
+    dut.io.prescalerLow.poke(1.U)
+    dut.io.prescalerHigh.poke(1.U)
     dut.clock.step(20)
 
     for (nTest <- 0 until (nRandomTest)) {
@@ -28,7 +28,7 @@ class SCCBInterfaceTest extends FlatSpec with ChiselScalatestTester{
       dut.io.controlAddr.poke(controlAddr.U)
       dut.io.configData.poke(configData.U)
 
-      while (!dut.io.sccbReady.peek.litToBoolean) {
+      while (!dut.io.SCCBReady.peek.litToBoolean) {
         dut.clock.step(1)
       }
       dut.io.config.poke(true.B)
@@ -42,7 +42,7 @@ class SCCBInterfaceTest extends FlatSpec with ChiselScalatestTester{
       val transmittedData = Array.fill(8) {0}
       var phase = 0
 
-      while (!dut.io.sccbReady.peek.litToBoolean) {
+      while (!dut.io.SCCBReady.peek.litToBoolean) {
         var cLow = dut.io.SIOC.peek.litValue()
         dut.clock.step(1)
         var cHigh = dut.io.SIOC.peek.litValue()
@@ -87,11 +87,11 @@ class SCCBInterfaceTest extends FlatSpec with ChiselScalatestTester{
     }
   Console.out.println(Console.YELLOW+"test result of SCCB interface: " + numberOfTestsPassed.toString+
       " tests passed over "+nRandomTest.toString+" being tested"+Console.RESET)
-    def bin2dec(in : Array[Int]): Int={
-      val arrayLength = in.length
+    def bin2dec(binArray : Array[Int]): Int={
+      val arrayLength = binArray.length
       var dec = 0
-      for(idx<-0 until arrayLength){
-        dec = dec + in(idx) * scala.math.pow(2,idx).toInt
+      for(idx <- 0 until arrayLength){
+        dec = dec + binArray(idx) * scala.math.pow(2,idx).toInt
       }
       dec
     }
