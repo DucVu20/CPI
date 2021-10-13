@@ -5,11 +5,11 @@ import chisel3.util._
 
 class XCLKSource(maxPrescaler: Int) extends Module{
   val io = IO(new Bundle{
-    val clockIn      = Input(Clock())
-    val XCLK         = Output(Bool())
-    val prescaler    = Input(UInt(log2Ceil(maxPrescaler).W))
-    val activate     = Input(Bool())
-    val reset        = Input(Bool())
+    val clockIn   = Input(Clock())
+    val XCLK      = Output(Bool())
+    val prescaler = Input(UInt(log2Ceil(maxPrescaler).W))
+    val activate  = Input(Bool())
+    val reset     = Input(Bool())
   })
   val clockDivider = Module(new ClockDivider(maxPrescaler))
 
@@ -26,7 +26,7 @@ class ClockDivider(maxPrescaler: Int) extends Module{
     val dividedClock = Output(Bool())
     val reset        = Input(Bool())
     val prescaler    = Input(UInt(log2Ceil(maxPrescaler).W))
-    val activate    = Input(Bool())
+    val activate     = Input(Bool())
   })
 
   withClockAndReset(io.clockIn, io.reset){
