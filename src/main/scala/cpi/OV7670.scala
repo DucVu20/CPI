@@ -1,4 +1,3 @@
-
 package sislab.cpi
 
 import chisel3._
@@ -32,8 +31,8 @@ object CPIMMIO{
   val returnImgHeight  = 0x18
   val pixel            = 0x1C
   val pixelAddr        = 0x20
-  val i2cPrescalerLow  = 0x24
-  val i2cPrescalerHigh = 0x28
+  val I2CPrescalerLow  = 0x24
+  val I2CPrescalerHigh = 0x28
 }
 
 class CPIIO(val p: CPIParams) extends Bundle{
@@ -66,13 +65,13 @@ class CPIIO(val p: CPIParams) extends Bundle{
 
   val config         = Input(Bool())
   val coreEna        = Input(Bool())
-  val sccbReady      = Output(Bool())
+  val SCCBReady      = Output(Bool())
   val SIOC           = Output(Bool())
   val SIOD           = Output(Bool())
   val configData     = Input(UInt(8.W))
   val controlAddress = Input(UInt(8.W))
-  val preScalerLow   = Input(UInt(8.W))
-  val preScalerHigh  = Input(UInt(8.W))
+  val prescalerLow   = Input(UInt(8.W))
+  val prescalerHigh  = Input(UInt(8.W))
 }
 
 trait CPIPortIO extends Bundle{
@@ -136,13 +135,13 @@ class CPI(p: CPIParams) extends Module with HasCPIIO {
 
   io.SIOC                  := SCCBInterface.io.SIOC
   io.SIOD                  := SCCBInterface.io.SIOD
-  io.sccbReady             := SCCBInterface.io.sccbReady
+  io.SCCBReady             := SCCBInterface.io.SCCBReady
   SCCBInterface.io.coreEna := io.coreEna
   SCCBInterface.io.config        := io.config
   SCCBInterface.io.configData    := io.configData
   SCCBInterface.io.controlAddr   := io.controlAddress
-  SCCBInterface.io.preScalerLow  := io.preScalerLow
-  SCCBInterface.io.preScalerHigh := io.preScalerHigh
+  SCCBInterface.io.prescalerLow  := io.prescalerLow
+  SCCBInterface.io.prescalerHigh := io.prescalerHigh
 }
 trait CPIModule extends HasRegMap{
   val io: CPIPortIO
@@ -160,8 +159,8 @@ trait CPIModule extends HasRegMap{
   val capture       = WireInit(false.B)
   val XCLKPrescaler = Reg(UInt(log2Ceil(params.maxXCLKPrescaler).W))
   val CPISetupReg   = Reg(UInt(4.W))
-  val preScalerLow  = Reg(UInt(8.W))
-  val preScalerHigh = Reg(UInt(8.W))
+  val prescalerLow  = Reg(UInt(8.W))
+  val prescalerHigh = Reg(UInt(8.W))
   //==== Cat(RGB888, CPI.io.videoMode, CPI.io.coreEna, CPI.io.activateXCLK)===//
   if(params.bytePerPixel == 3){
     CPI.io.RGB888.get := CPISetupReg(3)
@@ -187,16 +186,16 @@ trait CPIModule extends HasRegMap{
   CPI.io.controlAddress := cameraMode.bits(15,8)
   CPI.io.configData     := cameraMode.bits(7,0)
   CPI.io.config         := cameraMode.valid
-  cameraMode.ready      := CPI.io.sccbReady
-  CPI.io.preScalerLow   := preScalerLow
-  CPI.io.preScalerHigh  := preScalerHigh
+  cameraMode.ready      := CPI.io.SCCBReady
+  CPI.io.prescalerLow   := prescalerLow
+  CPI.io.prescalerHigh  := prescalerHigh
 
   pixel.bits       := CPI.io.pixelOut
   pixel.valid      := CPI.io.pixelValid
   CPI.io.readFrame := pixel.ready
   pixelAddr        := CPI.io.pixelAddr
   // status: videomode, sccbready, frameFull, newFrame, capturing
-  status := Cat(CPISetupReg(2), CPI.io.sccbReady, CPI.io.frameFull, CPI.io.newFrame, CPI.io.capturing)
+  status := Cat(CPISetupReg(2), CPI.io.SCCBReady, CPI.io.frameFull, CPI.io.newFrame, CPI.io.capturing)
   regmap(
     CPIMMIO.interfaceSetup -> Seq(
       RegField.w(CPISetupReg.getWidth, CPISetupReg)),
@@ -217,11 +216,11 @@ trait CPIModule extends HasRegMap{
     CPIMMIO.pixelAddr -> Seq(
       RegField.r(CPI.io.pixelAddr.getWidth, pixelAddr)
     ),
-    CPIMMIO.i2cPrescalerLow -> Seq(
-      RegField.w(8, preScalerLow)
+    CPIMMIO.I2CPrescalerLow -> Seq(
+      RegField.w(8, prescalerLow)
     ),
-    CPIMMIO.i2cPrescalerHigh -> Seq(
-      RegField.w(8, preScalerHigh)
+    CPIMMIO.I2CPrescalerHigh -> Seq(
+      RegField.w(8, prescalerHigh)
     )
   )
 }

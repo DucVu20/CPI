@@ -14,14 +14,14 @@ import chisel3.util._
 class I2CMaster extends Module{
   val io = IO(new Bundle{
     val config        = Input(Bool())
-    val sccbReady     = Output(Bool())
+    val SCCBReady     = Output(Bool())
     val SIOC          = Output(Bool())
     val SIOD          = Output(Bool())
     val configData    = Input(UInt(8.W))
     val controlAddr   = Input(UInt(8.W))
     val coreEna       = Input(Bool())
-    val preScalerLow  = Input(UInt(8.W))
-    val preScalerHigh = Input(UInt(8.W))
+    val prescalerLow  = Input(UInt(8.W))
+    val prescalerHigh = Input(UInt(8.W))
   })
   // as we only need to set up working modes for the camera, 3 phase write transmission cycle is employed
   // phase 1: ID Address, which is "h42" for OV7670
@@ -34,7 +34,7 @@ class I2CMaster extends Module{
   val clkEna       = RegInit(true.B)
   val latchedAddr  = RegInit(0.U(8.W))
   val latchedData  = RegInit(0.U(8.W))
-  val sccbReady    = RegInit(true.B)
+  val SCCBReady    = RegInit(true.B)
 
   val transmitBit  = RegInit(false.B)
 
@@ -50,11 +50,11 @@ class I2CMaster extends Module{
     io.SIOC := false.B
     io.SIOD := false.B
   }
-  io.sccbReady := sccbReady
+  io.SCCBReady := SCCBReady
 
   // generate clock enable signal
   when( !io.coreEna || !(clkCnt.orR)){
-    clkCnt := Cat(io.preScalerHigh, io.preScalerLow)
+    clkCnt := Cat(io.prescalerHigh, io.prescalerLow)
     clkEna := true.B
   }.otherwise{
     clkCnt := clkCnt -1.U
@@ -79,7 +79,7 @@ class I2CMaster extends Module{
       byteCounter := 3.U
       bitCnt      := 8.U
       when(io.config) {
-        sccbReady := false.B
+        SCCBReady := false.B
         FMS := bitStartA
       }
     }
@@ -153,7 +153,7 @@ class I2CMaster extends Module{
         SIOC      := true.B
         SIOD      := true.B
         i2cWrite  := false.B
-        sccbReady := true.B
+        SCCBReady := true.B
       }
     }
     is(bitWriteA){
