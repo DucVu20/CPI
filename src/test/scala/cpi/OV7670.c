@@ -2,19 +2,19 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-#define CPI_BASE_ADDR                   (0x10020000)
-#define INTERFACE_SETUP                 (CPI_BASE_ADDR)
-#define INTERFACE_STATUS                (CPI_BASE_ADDR + 0x04)
-#define XCLK_PRESCALER                  (CPI_BASE_ADDR + 0x08)
-#define SCCB_DATA                       (CPI_BASE_ADDR + 0xC)
-#define CAPTURE                         (CPI_BASE_ADDR + 0x10)
+#define CPI_BASE_ADDR           (0x10020000)
+#define INTERFACE_SETUP         (CPI_BASE_ADDR)
+#define INTERFACE_STATUS        (CPI_BASE_ADDR + 0x04)
+#define XCLK_PRESCALER          (CPI_BASE_ADDR + 0x08)
+#define SCCB_DATA               (CPI_BASE_ADDR + 0xC)
+#define CAPTURE                 (CPI_BASE_ADDR + 0x10)
 
-#define RETURN_IMAGE_WIDTH              (CPI_BASE_ADDR + 0x14)
-#define RETURN_IMAGE_HEIGHT             (CPI_BASE_ADDR + 0x18)
-#define PIXEL                           (CPI_BASE_ADDR + 0x1C)
-#define PIXEL_ADDR                      (CPI_BASE_ADDR + 0x20)
-#define I2C_PRESCALER_LOW               (CPI_BASE_ADDR + 0x24)
-#define I2C_PRESCALER_HIGH              (CPI_BASE_ADDR + 0x28)
+#define RETURN_IMAGE_WIDTH      (CPI_BASE_ADDR + 0x14)
+#define RETURN_IMAGE_HEIGHT     (CPI_BASE_ADDR + 0x18)
+#define PIXEL                   (CPI_BASE_ADDR + 0x1C)
+#define PIXEL_ADDR              (CPI_BASE_ADDR + 0x20)
+#define I2C_PRESCALER_LOW       (CPI_BASE_ADDR + 0x24)
+#define I2C_PRESCALER_HIGH      (CPI_BASE_ADDR + 0x28)
 
 
 // com7 reg: address 0x12
@@ -173,7 +173,7 @@ int main(void){
 
   /* if((reg_read16(RETURN_IMAGE_WIDTH)==352) & (reg_read16(RETURN_IMAGE_HEIGHT) == 290)){ */
   /*   while((reg_read8(INTERFACE_STATUS) & 0x04) == 4){ // while a frame hasn't been readouty */
-  /*     printf("%04X ", reg_read16(PIXEL)&0x00FF);   */
+  /*     printf("%04X ", reg_read16(PIXEL)&0x00FF); */
   /*   } */
   /* } */
 
@@ -189,7 +189,7 @@ int main(void){
   while((reg_read8(INTERFACE_STATUS) & 0x02) == 0); // wait for a new frame
   check_status();
 
-  /* if((reg_read16(RETURN_IMAGE_WIDTH)==352) & (reg_read16(RETURN_IMAGE_HEIGHT) == 290)){ */
+  /* if((reg_read16(RETURN_IMAGE_WIDTH)==174) & (reg_read16(RETURN_IMAGE_HEIGHT) == 144)){ */
   /*   while((reg_read8(INTERFACE_STATUS) & 0x04) == 4){ // while a frame hasn't been readouty */
   /*     printf("%04X ", reg_read16(PIXEL)&0x00FF); */
   /*   } */
@@ -210,3 +210,4 @@ int main(void){
   }
 }
 //make PROGRAM=OV7670 TARGET=chipyard-arty-ddr CONFIGURATION=debug LINK_TARGET=ramrodata clean
+
