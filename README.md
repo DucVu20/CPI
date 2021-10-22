@@ -12,6 +12,10 @@ Depending on the amount of BRAM avaible on your FPGA board, you can also configu
 This block is literally a clock divider, depending on the maximum frequency of your FPGA design, you can divide it to generate expected XCLK for the camera.
 # SoC Integration of the interface on ChipYard platfrom
 The class for integrating the entire design into a system on chip on Chipyard platform is OV7670.scala. The class for configuring hardware of the CPI is in CPIParams, and configuration, control, status registers are located in CPIMMIO. Sofware file for playing around with the interface is located in /main/src/test/scala/cpi/OV7670.c. To compile the C file for the RISCV based core, run *make OV7670.riscv*.
+## MMIO details
+![image](https://user-images.githubusercontent.com/63137043/138415144-42276c3b-ba8a-4e48-b5a0-387dff0b14d3.png)
+![image](https://user-images.githubusercontent.com/63137043/138415212-ac3ab355-6a2f-47a8-8ad7-1c4d9ffae341.png)
+
 # References
 [1] https://readthedocs.org/projects/chipyard/downloads/pdf/dev/ <br />
 [2] I2C-Master Core Specification - Richard Herveille. Available on https://opencores.org/projects/i2c/downloads <br />
