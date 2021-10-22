@@ -17,9 +17,9 @@ The class for integrating the entire design into a system on chip on Chipyard pl
 ![image](https://user-images.githubusercontent.com/63137043/138415212-ac3ab355-6a2f-47a8-8ad7-1c4d9ffae341.png)
 
 # References
-[1] https://readthedocs.org/projects/chipyard/downloads/pdf/dev/ <br />
+[1]Chipyard documentation: https://readthedocs.org/projects/chipyard/downloads/pdf/dev/ <br />
 [2] I2C-Master Core Specification - Richard Herveille. Available on https://opencores.org/projects/i2c/downloads <br />
-[3] http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf <br />
+[3]OV7670 datasheet: http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf <br />
 # Contact
 gmail: leducvuvietnam@gmail.com <br />
 Linkedin: https://www.linkedin.com/in/vu-d-le-47813a170/
