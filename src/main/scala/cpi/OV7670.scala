@@ -1,5 +1,10 @@
 package sislab.cpi
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// This file integrate the I2C and the CaptureModule on a system on a chip on Chipyard //
+//                  platform, developed at UC Berkerly.                                //
+/////////////////////////////////////////////////////////////////////////////////////////
+
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.{IntParam, BaseModule}
@@ -12,14 +17,14 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util._
 
 case class CPIParams(
-                      address: BigInt       = 0x10020000,
-                      useAXI4: Boolean      = false,
-                      imgWidthCnt: Int      = 640,
-                      imgHeightCnt: Int     = 480,
-                      bytePerPixel: Int     = 2,
-                      bufferDepth: Int      = 352*290,
-                      maxXCLKPrescaler: Int = 32
-                    )
+  address          : BigInt  = 0x10020000,
+  useAXI4          : Boolean = false,
+  imgWidthCnt      : Int     = 640,
+  imgHeightCnt     : Int     = 480,
+  bytePerPixel     : Int     = 2,
+  bufferDepth      : Int     = 352*290,
+  maxXCLKPrescaler : Int     = 32
+)
 
 object CPIMMIO{
   val interfaceSetup   = 0x00
@@ -62,6 +67,7 @@ class CPIIO(val p: CPIParams) extends Bundle{
   val frameFull    = Output(Bool()) // interrupt, false when an entire frame is read out
   val readFrame    = Input(Bool())  // ready
   val pixelValid   = Output(Bool()) // valid
+  val extractYComp = Input(Bool())
 
   val config         = Input(Bool())
   val coreEna        = Input(Bool())
@@ -118,7 +124,11 @@ class CPI(p: CPIParams) extends Module with HasCPIIO {
   if(p.bytePerPixel == 3){
     captureModule.io.RGB888.get  := io.RGB888.get
   }
-  io.pixelOut    := captureModule.io.pixelOut
+  when(io.extractYComp){
+    io.pixelOut    := captureModule.io.pixelOut(7, 0) // Y comp
+  }.otherwise{
+    io.pixelOut    := captureModule.io.pixelOut
+  }
   io.pixelAddr   := captureModule.io.pixelAddr
   io.frameHeight := captureModule.io.frameHeight
   io.frameWidth  := captureModule.io.frameWidth
@@ -158,13 +168,14 @@ trait CPIModule extends HasRegMap{
   val pixelAddr     = Wire(UInt(CPI.io.pixelAddr.getWidth.W))
   val capture       = WireInit(false.B)
   val XCLKPrescaler = Reg(UInt(log2Ceil(params.maxXCLKPrescaler).W))
-  val CPISetupReg   = Reg(UInt(4.W))
+  val CPISetupReg   = Reg(UInt(5.W))
   val prescalerLow  = Reg(UInt(8.W))
   val prescalerHigh = Reg(UInt(8.W))
   //==== Cat(RGB888, CPI.io.videoMode, CPI.io.coreEna, CPI.io.activateXCLK)===//
   if(params.bytePerPixel == 3){
-    CPI.io.RGB888.get := CPISetupReg(3)
+    CPI.io.RGB888.get := CPISetupReg(4)
   }
+  CPI.io.extractYComp := CPISetupReg(3)
   CPI.io.videoMode    := CPISetupReg(2)
   CPI.io.coreEna      := CPISetupReg(1)
   CPI.io.activateXCLK := CPISetupReg(0)
@@ -196,6 +207,7 @@ trait CPIModule extends HasRegMap{
   pixelAddr        := CPI.io.pixelAddr
   // status: videomode, sccbready, frameFull, newFrame, capturing
   status := Cat(CPISetupReg(2), CPI.io.SCCBReady, CPI.io.frameFull, CPI.io.newFrame, CPI.io.capturing)
+  // Memory Mapped Register
   regmap(
     CPIMMIO.interfaceSetup -> Seq(
       RegField.w(CPISetupReg.getWidth, CPISetupReg)),

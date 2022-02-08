@@ -3,23 +3,6 @@ package sislab.cpi
 import chisel3._
 import chisel3.util._
 
-class XCLKSource(maxPrescaler: Int) extends Module{
-  val io = IO(new Bundle{
-    val clockIn   = Input(Clock())
-    val XCLK      = Output(Bool())
-    val prescaler = Input(UInt(log2Ceil(maxPrescaler).W))
-    val activate  = Input(Bool())
-    val reset     = Input(Bool())
-  })
-  val clockDivider = Module(new ClockDivider(maxPrescaler))
-
-  clockDivider.io.clockIn   := io.clockIn
-  clockDivider.io.reset     := io.reset
-  clockDivider.io.prescaler := io.prescaler
-  clockDivider.io.activate  := io.activate
-  io.XCLK                   := clockDivider.io.dividedClock
-}
-
 class ClockDivider(maxPrescaler: Int) extends Module{
   val io = IO(new Bundle {
     val clockIn      = Input(Clock())
@@ -45,4 +28,21 @@ class ClockDivider(maxPrescaler: Int) extends Module{
       io.dividedClock := false.B
     }
   }
+}
+
+class XCLKSource(maxPrescaler: Int) extends Module{
+  val io = IO(new Bundle{
+    val clockIn   = Input(Clock())
+    val XCLK      = Output(Bool())
+    val prescaler = Input(UInt(log2Ceil(maxPrescaler).W))
+    val activate  = Input(Bool())
+    val reset     = Input(Bool())
+  })
+  val clockDivider = Module(new ClockDivider(maxPrescaler))
+
+  clockDivider.io.clockIn   := io.clockIn
+  clockDivider.io.reset     := io.reset
+  clockDivider.io.prescaler := io.prescaler
+  clockDivider.io.activate  := io.activate
+  io.XCLK                   := clockDivider.io.dividedClock
 }

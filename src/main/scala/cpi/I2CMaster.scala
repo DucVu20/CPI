@@ -1,12 +1,21 @@
 package sislab.cpi
 
-  // since the SCCB interface is the copy version of the I2C interface, and we're only //
-  // interested in writing configurations to the camera. This interface is designed    //
-  // only for that purpose. Note that the clock divider above generate time pieces for //
-  // the finite state machine to generate correct timing. To learn more above the I2C  //
-  // specifications, visit I2C-Master Core Specification - Richard Herveille for more  //
-  // information in timing specifications and control register. This design doesn't    //
-  //       cover everything in the I2C interface, designed to be lightweight.          //
+////////////////////////////////////////////////////////////////////////////////////////////////
+// I2C Specification desinged by Richard Herveille, redesigned and re-written in Chisel HDL   //
+//                              by Vu D. Le                                                   //
+//                          Date: September 2021                                              //
+//             Company: Information Technology Institute, VNU                                 //
+// Dedicated applications: Writing configurations to embedded camera having the I2C interface //
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// since the SCCB interface is the copy version of the I2C interface, and we're only
+// interested in writing configurations to the camera. This interface is designed
+// only for that purpose. Note that the clock divider above generate time pieces for
+// the finite state machine to generate correct timing. To learn more above the I2C
+// specifications, visit I2C-Master Core Specification - Richard Herveille for more
+// information in timing specifications and control register. This design doesn't
+//   cover everything in the I2C interface, designed to be lightweight.
 
 import chisel3._
 import chisel3.util._
@@ -194,6 +203,7 @@ class I2CMaster extends Module{
       }
       switch(byteCounter){
         is(3.U) { transmitByte := 0x42.U      } // address for writing, bit write included.
+          // replace 0x42 by the latchedAddr if you want to write another address
         is(2.U) { transmitByte := latchedAddr }
         is(1.U) { transmitByte := latchedData }
         is(0.U) { transmitByte := latchedData }
