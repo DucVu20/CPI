@@ -2,9 +2,8 @@
 Targeted camera: OV7670 OmmiVision
 # Introduction
 This camera interface is designed to integrate on a system on a chip (SoC) on ChipYard framwork to acquire images from OmminiVision OV7670 for a CNN accelerator. However, you can use it for your own needs. The design is written in Chisel and is highly parameterizable. Although the design targets OV7670, it can be used for any camera with the same interface. The design deploys the I2C interface to configure the camera and supports two versions 16 bit RGB formats and RGB888. I recommend you guys to visit the datasheet for more information about the OV7670 camera: http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf
-# Design
+# Hardware design of the Camera and I2C interface
 ![CPI](https://github.com/DucVu20/CameraInterface/blob/main/design/CPI.png)
-Hardware design of the Camera and I2C interface
 # Configuration
 ## SCCB Interface
 The OV7670 requires configuration to output the correct color format with the proper color balance. This is done over the SCCB interface, which is a copy of the I2C protocol. Since we're only interested in writing configurations for the camera, the I2C is redesigned only for transmiting data from the interface to the camera. To configure the camera, you must specify the address of a register and its coresponding data, and at insert the *config* signal at the same clock cycle. To disable communication over the I2C interface, write false to the *coreEna* signal. The SCCB interface should be disabled when it's not used
