@@ -219,7 +219,7 @@ class CaptureModuleChiselTestRealFrame extends FlatSpec with ChiselScalatestTest
     val t_line = 2 * pclock
 
     //====================synthesized timing========================//
-    val dogFrame = Source.fromFile("E:/HDL/CHISEL projects/CPI/src/test/resources/dogGray.txt").getLines.toArray
+    val dogFrame = Source.fromResource("/dogGray.txt").getLines.toArray
 
     dut.io.vsync.poke(false.B)
     dut.io.href.poke(false.B)
