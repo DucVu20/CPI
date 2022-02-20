@@ -16,7 +16,7 @@ The class for integrating the entire design into a system on chip on Chipyard pl
 ![image](https://user-images.githubusercontent.com/63137043/138415144-42276c3b-ba8a-4e48-b5a0-387dff0b14d3.png)
 ![image](https://user-images.githubusercontent.com/63137043/138415212-ac3ab355-6a2f-47a8-8ad7-1c4d9ffae341.png)
 ## SOC Demo results
-![alt text](https://github.com/DucVu20/CameraInterface/blob/main/design/CIF_1.png) | ![alt text](https://github.com/DucVu20/CameraInterface/blob/main/design/QCIF.png)
+![CIF Resolution](https://github.com/DucVu20/CameraInterface/blob/main/design/CIF_1.png) | ![QCIF Resolution](https://github.com/DucVu20/CameraInterface/blob/main/design/QCIF.png)
 # References
 [1]Chipyard documentation: https://readthedocs.org/projects/chipyard/downloads/pdf/dev/ <br />
 [2] I2C-Master Core Specification - Richard Herveille. Available on https://opencores.org/projects/i2c/downloads <br />
