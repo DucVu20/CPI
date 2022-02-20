@@ -5,6 +5,7 @@ This camera interface is designed to integrate on a system on a chip (SoC) on Ch
 # Hardware design of the Camera and I2C interface
 ![CPI](https://github.com/DucVu20/CameraInterface/blob/main/design/CPI.png)
 # Configuration
+Configuration class is located in src/main/scala/cpi/OV7670.scala (CPIParams class)
 ## SCCB Interface
 The OV7670 requires configuration to output the correct color format with the proper color balance. This is done over the SCCB interface, which is a copy of the I2C protocol. Since we're only interested in writing configurations for the camera, the I2C is redesigned only for transmiting data from the interface to the camera. To configure the camera, you must specify the address of a register and its coresponding data, and at insert the *config* signal at the same clock cycle. To disable communication over the I2C interface, write false to the *coreEna* signal. The SCCB interface should be disabled when it's not used
 ## Capture Module
@@ -13,7 +14,7 @@ Depending on the amount of BRAM avaible on your FPGA board, you can also configu
 ## XCLKGenerator
 This block is literally a clock divider, depending on the maximum frequency of your FPGA design, you can divide it to generate expected XCLK for the camera.
 # SoC Integration of the interface on ChipYard platfrom
-The class for integrating the entire design into a system on chip on Chipyard platform is OV7670.scala. The class for configuring hardware of the CPI is in CPIParams, and configuration, control, status registers are located in CPIMMIO. Sofware file for playing around with the interface is located in /main/src/test/scala/cpi/OV7670.c. To compile the C file for the RISCV based core, run *make OV7670.riscv*.
+The class for integrating the entire design into a system on chip on Chipyard platform is OV7670.scala. The class for configuring hardware of the CPI is in CPIParams, and configuration, control, status registers are located in CPIMMIO. Sofware file for playing around with the interface is located in ./embeddedSoftware/OV7670.c. To compile the C file for the RISCV based core in chipyard platform, run *make OV7670.riscv*.
 ## MMIO details
 ![image](https://user-images.githubusercontent.com/63137043/138415144-42276c3b-ba8a-4e48-b5a0-387dff0b14d3.png)
 ![image](https://user-images.githubusercontent.com/63137043/138415212-ac3ab355-6a2f-47a8-8ad7-1c4d9ffae341.png)
