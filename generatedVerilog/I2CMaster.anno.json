@@ -1,0 +1,24 @@
+[
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~I2CMaster|I2CMaster>io_SIOD",
+    "sources":[
+      "~I2CMaster|I2CMaster>io_coreEna"
+    ]
+  },
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~I2CMaster|I2CMaster>io_SIOC",
+    "sources":[
+      "~I2CMaster|I2CMaster>io_coreEna"
+    ]
+  },
+  {
+    "class":"firrtl.EmitCircuitAnnotation",
+    "emitter":"firrtl.VerilogEmitter"
+  },
+  {
+    "class":"firrtl.transforms.BlackBoxTargetDirAnno",
+    "targetDir":"generatedVerilog"
+  }
+]
