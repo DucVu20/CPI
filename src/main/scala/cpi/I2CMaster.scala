@@ -19,6 +19,7 @@ package sislab.cpi
 
 import chisel3._
 import chisel3.util._
+import chisel3.stage.ChiselStage
 
 class I2CMaster extends Module{
   val io = IO(new Bundle{
@@ -219,4 +220,8 @@ class I2CMaster extends Module{
       }
     }
   }
+}
+
+object I2CMaster extends App{
+  new (ChiselStage).emitVerilog(new I2CMaster(), Array("--target-dir","generatedVerilog"))
 }

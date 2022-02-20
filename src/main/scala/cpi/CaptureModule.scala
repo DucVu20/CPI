@@ -211,3 +211,8 @@ class CaptureModule(imgWidthCnt: Int, imgHeightCnt: Int,
   io.frameFull      := frameFull
   io.pixelValid     := pixelValid
 }
+
+object CaptureModule extends App{
+  new (ChiselStage).emitVerilog(new CaptureModule(CPIParams.apply().imgWidthCnt, CPIParams.apply().imgHeightCnt,
+    CPIParams.apply().bytePerPixel, CPIParams.apply().bufferDepth), Array("--target-dir","generatedVerilog"))
+}
