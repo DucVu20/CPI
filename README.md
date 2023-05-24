@@ -1,7 +1,7 @@
 # Camera Interface: OV7670-Chisel Implementation
 Targeted camera: OV7670 OmmiVision
 # Introduction
-This camera interface is designed to integrate on a system on a chip (SoC) on ChipYard framwork to acquire images from OmminiVision OV7670 for a CNN accelerator. However, you can use it for your own needs. The design is written in Chisel and is highly parameterizable. Although the design targets OV7670, it can be used for any camera with the same interface. The design deploys the I2C interface to configure the camera and supports two versions 16 bit RGB formats and RGB888. I recommend you guys to visit the datasheet for more information about the OV7670 camera: http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf
+This camera interface is designed to be integrated on a system on a chip (SoC) in the ChipYard framwork from Berkerly to acquire images from OmminiVision OV7670 for a CNN accelerator. However, you can use it for your own needs. The design is written in Chisel and is highly parameterizable. Although the design targets OV7670, it can be used for any camera with the same interface. The design deploys the I2C interface to configure the camera and supports two versions 16 bit RGB formats and RGB888. I recommend you guys to visit the datasheet for more information about the OV7670 camera: http://web.mit.edu/6.111/www/f2016/tools/OV7670_2006.pdf
 # Hardware design of the Camera and I2C interface
 ![CPI](https://github.com/DucVu20/CameraInterface/blob/main/design/CPI.png)
 # Configuration
